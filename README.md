@@ -2,7 +2,7 @@
 
 A modern, lightweight web-based diagram editor built with React, TypeScript, and Tailwind CSS. Create, edit, and export professional diagrams with an intuitive interface and dark mode support.
 
-<img width="1485" height="822" alt="Screenshot 2026-03-26 at 9 33 14" src="https://github.com/user-attachments/assets/c5934cfa-9a96-4e10-a98e-6cf8ad89eeab" />
+<img width="1486" height="816" alt="Screenshot 2026-03-26 at 10 21 47" src="https://github.com/user-attachments/assets/5f294fcb-04f1-4818-8f69-7d6b6026ffc8" />
 
 ## Demo
 
