@@ -230,6 +230,8 @@ export function UMLBox({ element }: UMLBoxProps) {
   const { updateElement, deleteElement, addRelationship, updateRelationship } = useDiagramStore();
   const { selectedElementId, selectedElementIds, selectElement, tool, connectSourceId, setConnectSource, pendingRelType, snapToGrid: snapEnabled } = useUIStore();
   const { zoom } = useContext(CanvasContext);
+  const suppressNextClickRef = useRef(false);
+  const dragMovedRef = useRef(false);
 
   const isSelected      = selectedElementId === element.id || selectedElementIds.includes(element.id);
   const isConnectSource = connectSourceId   === element.id;
@@ -243,6 +245,7 @@ export function UMLBox({ element }: UMLBoxProps) {
     e.stopPropagation();
     const sx = e.clientX;
     const sy = e.clientY;
+    dragMovedRef.current = false;
 
     // If the dragged box is part of current multi-selection, move the entire selection together.
     const moveIds = selectedElementIds.includes(element.id) ? selectedElementIds : [element.id];
@@ -255,6 +258,10 @@ export function UMLBox({ element }: UMLBoxProps) {
     );
 
     const onMove = (ev: MouseEvent) => {
+      if (!dragMovedRef.current) {
+        const moved = Math.abs(ev.clientX - sx) > 3 || Math.abs(ev.clientY - sy) > 3;
+        if (moved) dragMovedRef.current = true;
+      }
       const dx = (ev.clientX - sx) / zoom;
       const dy = (ev.clientY - sy) / zoom;
       moveIds.forEach((id) => {
@@ -268,7 +275,11 @@ export function UMLBox({ element }: UMLBoxProps) {
         });
       });
     };
-    const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+    const onUp = () => {
+      if (dragMovedRef.current) suppressNextClickRef.current = true;
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
   };
@@ -276,6 +287,10 @@ export function UMLBox({ element }: UMLBoxProps) {
   // ── Click (select / connect) ──
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (suppressNextClickRef.current) {
+      suppressNextClickRef.current = false;
+      return;
+    }
     if (tool === 'connect' || tool === 'dashed_connect') {
       if (!connectSourceId)                    { setConnectSource(element.id); }
       else if (connectSourceId !== element.id) { 
