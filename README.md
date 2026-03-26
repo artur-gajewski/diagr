@@ -2,7 +2,7 @@
 
 A modern, lightweight web-based UML diagram editor built with React, TypeScript, and Tailwind CSS. Create, edit, and export professional UML diagrams with an intuitive interface and dark mode support.
 
-![Diagr Screenshot](./diagr.svg)
+<img width="1485" height="822" alt="Screenshot 2026-03-26 at 9 33 14" src="https://github.com/user-attachments/assets/c5934cfa-9a96-4e10-a98e-6cf8ad89eeab" />
 
 ## Features
 
