@@ -1,4 +1,4 @@
-# Diagr — UML Diagram Designer
+# Diagr — Free Online Diagram Designer
 
 A modern, lightweight web-based diagram editor built with React, TypeScript, and Tailwind CSS. Create, edit, and export professional diagrams with an intuitive interface and dark mode support.
 
