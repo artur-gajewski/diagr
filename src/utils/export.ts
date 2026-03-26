@@ -368,10 +368,10 @@ function buildSVGDefs(_dark: boolean) {
   const fill = _dark ? '#1e293b' : '#ffffff';
   return `
   <marker id="arrow-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
-    <path d="M0,0 L10,5 L0,10" fill="none" stroke="${stroke}" stroke-width="1.5"/>
+    <polygon points="0,0 10,5 0,10" fill="${stroke}" stroke="${stroke}" stroke-width="1"/>
   </marker>
   <marker id="arrow-hollow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto">
-    <polygon points="0,0 10,5 0,10" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>
+    <polygon points="0,0 10,5 0,10" fill="${stroke}" stroke="${stroke}" stroke-width="1"/>
   </marker>
   <marker id="diamond-filled" viewBox="0 0 20 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
     <polygon points="0,5 10,0 20,5 10,10" fill="${stroke}" stroke="${stroke}" stroke-width="1"/>

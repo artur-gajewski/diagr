@@ -19,12 +19,11 @@ export function SvgDefs() {
         markerHeight="8"
         orient="auto"
       >
-        <path
-          d="M0,1 L9,5 L0,9"
-          fill="none"
+        <polygon
+          points="0,0 10,5 0,10"
+          fill="currentColor"
           stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
+          strokeWidth="1"
           strokeLinejoin="round"
         />
       </marker>
@@ -41,9 +40,9 @@ export function SvgDefs() {
       >
         <polygon
           points="0,0 12,6 0,12"
-          fill="var(--bg-fill)"
+          fill="currentColor"
           stroke="currentColor"
-          strokeWidth="1.5"
+          strokeWidth="1"
           strokeLinejoin="round"
         />
       </marker>
