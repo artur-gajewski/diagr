@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion';
 import {
-  ArrowRight,
   MousePointer2,
   Hand,
   Link,
+  Check,
+  X,
 } from 'lucide-react';
 import { useDiagramStore } from '@/store/diagramStore';
 import { useUIStore, type Tool } from '@/store/uiStore';
@@ -17,12 +18,15 @@ const ELEMENT_TYPES: { type: ElementType; label: string; icon: React.ReactNode; 
     { type: 'database', label: 'Database', icon: <span className="w-4 h-4 rounded-sm bg-emerald-500 block flex-shrink-0" />, color: 'text-emerald-500' },
     { type: 'service',  label: 'Service',  icon: <span className="w-4 h-4 rounded-sm bg-violet-500  block flex-shrink-0" />, color: 'text-violet-500'  },
     { type: 'object',   label: 'Object',   icon: <span className="w-4 h-4 rounded-sm bg-orange-500  block flex-shrink-0" />, color: 'text-orange-500'  },
+    { type: 'condition',label: 'Condition',icon: <span className="w-4 h-4 rounded-sm border border-slate-300 bg-white block flex-shrink-0" />, color: 'text-slate-500'  },
   ];
 
 const EXTRA_TYPES: { type: ElementType; label: string; icon: React.ReactNode; color: string }[] =
     [
       { type: 'text',     label: 'Text',     icon: <span className="text-sm font-bold leading-none">A</span>, color: 'text-slate-500'   },
       { type: 'note',     label: 'Note',     icon: <span className="w-4 h-4 rounded-sm bg-yellow-400  block flex-shrink-0" />, color: 'text-yellow-500'  },
+      { type: 'yes',      label: 'Yes',      icon: <span className="w-4 h-4 rounded-sm bg-green-500 flex items-center justify-center text-white"><Check size={12} strokeWidth={3} /></span>, color: 'text-green-500'  },
+      { type: 'no',       label: 'No',       icon: <span className="w-4 h-4 rounded-sm bg-rose-500 flex items-center justify-center text-white"><X size={12} strokeWidth={3} /></span>, color: 'text-rose-500'  },
     ];
 
 const TOOLS: { tool: Tool; icon: React.ReactNode; label: string }[] = [

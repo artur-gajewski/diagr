@@ -174,6 +174,25 @@ export function generateSVGString(
       // ── Architecture element (service / system / actor) ──
       const rect = getBoxRect(el);
       const h = getBoxHeight(el);
+
+      if (el.type === 'condition') {
+        const cx = el.x + rect.width / 2;
+        const cy = el.y + h / 2;
+        return [
+          `<rect x="${el.x}" y="${el.y}" width="${rect.width}" height="${h}" rx="10" ry="10" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>`,
+          svgText(cx, cy + 5, el.name, '#334155', 14, 'middle', false, true),
+        ].join('\n');
+      }
+
+      if (el.type === 'yes' || el.type === 'no') {
+        const fill = el.type === 'yes' ? '#22c55e' : '#dc2626';
+        const icon = el.type === 'yes' ? '✓' : '✕';
+        return [
+          `<rect x="${el.x}" y="${el.y}" width="${rect.width}" height="${h}" rx="10" ry="10" fill="${fill}" stroke="none"/>`,
+          svgText(el.x + rect.width / 2, el.y + h / 2 + 5, icon, '#ffffff', 20, 'middle', false, true),
+        ].join('\n');
+      }
+
       const hdrColor = headerColorSVG(el.type);
 
       const lines = [
@@ -181,7 +200,7 @@ export function generateSVGString(
         svgText(el.x + rect.width / 2, el.y + h / 2 + 5, el.name, '#ffffff', 14, 'middle', false, true),
       ];
 
-      return lines;
+      return lines.join('\n');
     })
     .join('\n');
 

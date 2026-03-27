@@ -1,5 +1,14 @@
 // ────────── Primitives ──────────
-export type ElementType = 'server' | 'database' | 'service' | 'object' | 'note' | 'text';
+export type ElementType =
+  | 'server'
+  | 'database'
+  | 'service'
+  | 'object'
+  | 'condition'
+  | 'yes'
+  | 'no'
+  | 'note'
+  | 'text';
 export type Visibility = '+' | '-' | '#' | '~';
 export type RelationshipType =
   | 'association'

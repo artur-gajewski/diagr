@@ -60,6 +60,9 @@ export const useDiagramStore = create<DiagramStore>()(
           database: 'DB',
           service:  'Service',
           object:   'Object',
+          condition:'Condition',
+          yes:      'Yes',
+          no:       'No',
           note:     'Note',
           text:     'Text',
         };
@@ -75,6 +78,8 @@ export const useDiagramStore = create<DiagramStore>()(
           ...(type === 'text' ? { boxWidth: 220, boxHeight: 120 } : {}),
           ...(type === 'text' ? { fontSize: 24 } : {}),
           ...(type === 'text' ? { textAlign: 'left' as const } : {}),
+          ...(type === 'condition' ? { boxWidth: 190, boxHeight: 110 } : {}),
+          ...((type === 'yes' || type === 'no') ? { boxWidth: 72, boxHeight: 52 } : {}),
         };
         set((s) => ({ elements: [...s.elements, el] }));
         return id;

@@ -11,6 +11,9 @@ const EL_TYPES: { value: ElementType; label: string }[] = [
   { value: 'database', label: 'Database' },
   { value: 'service',  label: 'Service'  },
   { value: 'object',   label: 'Object'   },
+  { value: 'condition',label: 'Condition'},
+  { value: 'yes',      label: 'Yes'      },
+  { value: 'no',       label: 'No'       },
   { value: 'text',     label: 'Text'     },
 ];
 

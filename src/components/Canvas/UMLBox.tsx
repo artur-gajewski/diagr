@@ -1,6 +1,6 @@
 import { useContext, useLayoutEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trash2, GripHorizontal, StickyNote, Zap } from 'lucide-react';
+import { Trash2, GripHorizontal, StickyNote, Zap, Check, X } from 'lucide-react';
 import type { UMLElement } from '@/types';
 import { useDiagramStore } from '@/store/diagramStore';
 import { useUIStore } from '@/store/uiStore';
@@ -14,6 +14,8 @@ const BOX_GRADIENT: Record<string, string> = {
   database: 'from-emerald-500 to-emerald-700',
   service:  'from-violet-500 to-violet-700',
   object:   'from-orange-500 to-orange-700',
+  yes:      'from-green-500 to-green-700',
+  no:       'from-rose-500 to-rose-700',
 };
 
 
@@ -341,24 +343,45 @@ export function UMLBox({ element }: UMLBoxProps) {
     );
   }
 
-  // ── Class / Interface / Abstract ──
-  const gradient = BOX_GRADIENT[element.type] ?? BOX_GRADIENT.class;
+  // ── Regular architecture boxes + condition / yes / no ──
+  const gradient = BOX_GRADIENT[element.type] ?? BOX_GRADIENT.server;
   const boxW = getBoxWidth(element);
   const boxH = getBoxHeight(element);
+  const isCondition = element.type === 'condition';
+  const isYesNo = element.type === 'yes' || element.type === 'no';
 
   const ring = isSelected
-    ? 'ring-2 ring-white/60 ring-offset-2 ring-offset-transparent'
+    ? (isCondition
+      ? 'ring-2 ring-blue-400/70 ring-offset-1 ring-offset-transparent'
+      : 'ring-2 ring-white/60 ring-offset-2 ring-offset-transparent')
     : isConnectSource ? 'ring-2 ring-amber-400 ring-offset-1'
-    : (tool === 'connect' || tool === 'dashed_connect') ? 'hover:ring-2 hover:ring-white/40 hover:ring-offset-1' : '';
+    : (tool === 'connect' || tool === 'dashed_connect')
+      ? (isCondition ? 'hover:ring-2 hover:ring-blue-300/60 hover:ring-offset-1' : 'hover:ring-2 hover:ring-white/40 hover:ring-offset-1')
+      : '';
+
+  const boxStyle: React.CSSProperties = {
+    position: 'absolute',
+    left: element.x,
+    top: element.y,
+    width: boxW,
+    height: boxH,
+    cursor: (tool === 'connect' || tool === 'dashed_connect') ? 'crosshair' : 'grab',
+    zIndex: isSelected ? 30 : 20,
+    userSelect: 'none',
+    pointerEvents: 'auto',
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.85 }}
       transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-      style={{ position: 'absolute', left: element.x, top: element.y, width: boxW, height: boxH,
-               cursor: (tool === 'connect' || tool === 'dashed_connect') ? 'crosshair' : 'grab',
-               zIndex: isSelected ? 30 : 20, userSelect: 'none', pointerEvents: 'auto' }}
-      className={cn('rounded-xl shadow-lg bg-gradient-to-br overflow-hidden select-none', gradient, ring)}
+      style={boxStyle}
+      className={cn(
+        'shadow-lg overflow-hidden select-none',
+        isCondition ? 'rounded-xl bg-white border-2 border-slate-300 dark:border-slate-500' : 'rounded-xl bg-gradient-to-br',
+        !isCondition && gradient,
+        ring,
+      )}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
     >
@@ -368,7 +391,12 @@ export function UMLBox({ element }: UMLBoxProps) {
           <input
             autoFocus
             value={nameValue}
-            className="bg-white/20 text-white text-sm font-bold text-center rounded px-2 py-0.5 outline-none w-full"
+            className={cn(
+              'text-sm font-bold text-center rounded px-2 py-0.5 outline-none w-full',
+              isCondition
+                ? 'bg-slate-100 text-slate-800 border border-slate-300'
+                : 'bg-white/20 text-white'
+            )}
             onChange={(e) => setNameValue(e.target.value)}
             onBlur={() => { setEditingName(false); if (nameValue.trim()) updateElement(element.id, { name: nameValue.trim() }); }}
             onKeyDown={(e) => {
@@ -380,13 +408,27 @@ export function UMLBox({ element }: UMLBoxProps) {
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <span
-            className="text-white font-bold text-sm text-center leading-snug px-1 cursor-text"
-            onDoubleClick={(e) => { e.stopPropagation(); setNameValue(element.name); setEditingName(true); }}
+          <div
+            className={cn(
+              'font-bold text-sm text-center leading-snug px-1 cursor-text select-none',
+              isCondition ? 'text-slate-700 dark:text-slate-200' : 'text-white'
+            )}
+            onDoubleClick={(e) => {
+              if (isYesNo) return;
+              e.stopPropagation();
+              setNameValue(element.name);
+              setEditingName(true);
+            }}
             title="Double-click to rename"
           >
-            {element.name}
-          </span>
+            {isYesNo ? (
+              <span className="inline-flex items-center justify-center align-middle">
+                {element.type === 'yes' ? <Check size={20} strokeWidth={3} /> : <X size={20} strokeWidth={3} />}
+              </span>
+            ) : (
+              <span>{element.name}</span>
+            )}
+          </div>
         )}
       </div>
 
@@ -395,7 +437,12 @@ export function UMLBox({ element }: UMLBoxProps) {
       {isSelected && (
         <div
           onMouseDown={handleResize}
-          className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize bg-white/20 hover:bg-white/40 transition-colors rounded-tl-lg"
+          className={cn(
+            'absolute bottom-0 right-0 w-4 h-4 cursor-se-resize transition-colors',
+            isCondition
+              ? 'bg-slate-200/80 hover:bg-slate-300/90 rounded-tl-sm'
+              : 'bg-white/20 hover:bg-white/40 rounded-tl-lg'
+          )}
           title="Drag to resize"
         />
       )}
