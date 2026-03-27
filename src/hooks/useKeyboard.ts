@@ -6,6 +6,8 @@ export function useKeyboard() {
   const deleteElement = useDiagramStore((s) => s.deleteElement);
   const deleteRelationship = useDiagramStore((s) => s.deleteRelationship);
   const updateRelationship = useDiagramStore((s) => s.updateRelationship);
+  const undoDiagram = useDiagramStore((s) => s.undoDiagram);
+  const canUndo = useDiagramStore((s) => s.canUndo);
   const elements = useDiagramStore((s) => s.elements);
   const relationships = useDiagramStore((s) => s.relationships);
   const { selectedElementId, selectedElementIds, selectedRelationshipId, selectElement, selectRelationship, setTool, setSelectedElements, fitToContent, zoom, zoomAtViewportCenter, snapToGrid, setSnapToGrid } =
@@ -99,6 +101,15 @@ export function useKeyboard() {
         }
       }
 
+      // Undo last change (U)
+      if (key === 'u' && canUndo) {
+        e.preventDefault();
+        undoDiagram();
+        selectElement(null);
+        selectRelationship(null);
+        setTool('select');
+      }
+
       // Toggle selected relationship routing (R)
       if (key === 'r' && selectedRelationshipId) {
         e.preventDefault();
@@ -127,9 +138,11 @@ export function useKeyboard() {
     relationships,
     zoom,
     snapToGrid,
+    canUndo,
     deleteElement,
     deleteRelationship,
     updateRelationship,
+    undoDiagram,
     selectElement,
     selectRelationship,
     setSelectedElements,

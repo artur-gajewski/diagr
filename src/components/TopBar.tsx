@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Download,
   Upload,
+  RotateCcw,
   Sun,
   Moon,
   FileJson,
@@ -37,7 +38,8 @@ interface TopBarProps {
 
 export function TopBar({ canvasRef }: TopBarProps) {
   const { theme, toggleTheme, zoom, panX, panY, setZoom, setPan, resetView, snapToGrid, setSnapToGrid, selectElement, selectRelationship } = useUIStore();
-  const { exportDiagram, loadDiagram, clearDiagram } = useDiagramStore();
+  const { exportDiagram, loadDiagram, clearDiagram, undoDiagram } = useDiagramStore();
+  const canUndo = useDiagramStore((s) => s.canUndo);
   const elements = useDiagramStore((s) => s.elements);
   const relationships = useDiagramStore((s) => s.relationships);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -142,6 +144,13 @@ export function TopBar({ canvasRef }: TopBarProps) {
       alert('Invalid JSON diagram file.');
     }
     e.target.value = '';
+  };
+
+  const handleUndo = () => {
+    if (!canUndo) return;
+    undoDiagram();
+    selectElement(null);
+    selectRelationship(null);
   };
 
   return (
@@ -252,6 +261,15 @@ export function TopBar({ canvasRef }: TopBarProps) {
             )}
           </AnimatePresence>
         </div>
+
+        {/* Clear */}
+        <IconBtn
+          title={canUndo ? 'Undo last change (U)' : 'Nothing to undo'}
+          onClick={handleUndo}
+          disabled={!canUndo}
+        >
+          <RotateCcw size={14} />
+        </IconBtn>
 
         {/* Clear */}
         <IconBtn
@@ -483,6 +501,12 @@ export function TopBar({ canvasRef }: TopBarProps) {
                   </div>
                   <div className="flex items-start gap-3">
                     <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-nowrap">
+                      U
+                    </kbd>
+                    <span className="text-slate-600 dark:text-slate-400">Undo the last diagram change</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-nowrap">
                       G
                     </kbd>
                     <span className="text-slate-600 dark:text-slate-400">Toggle grid / snap mode</span>
@@ -553,12 +577,14 @@ function IconBtn({
   onClick,
   danger,
   active,
+  disabled,
 }: {
   children: React.ReactNode;
   title: string;
   onClick: () => void;
   danger?: boolean;
   active?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <motion.button
@@ -566,9 +592,12 @@ function IconBtn({
       title={title}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
+      disabled={disabled}
       className={cn(
         'w-8 h-8 flex items-center justify-center rounded-lg transition-colors',
-        danger
+        disabled
+          ? 'text-slate-300 dark:text-slate-700 cursor-not-allowed'
+          : danger
           ? 'text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20'
           : active
           ? 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40'

@@ -13,13 +13,13 @@ Fully working demo: https://diagr-online.vercel.app
 ✨ **Core Capabilities**
 - 🎨 **Intuitive Canvas** — Drag and drop UML elements with real-time rendering
 - 📦 **Element Types** — Server, Database, Service, Object, Note, and Text elements
-- 🔗 **Relationship Types** — Association, Inheritance, Composition, Aggregation, Dependency, and Realization
+- 🔗 **Relationship Types** — Association, Inheritance, Composition, Aggregation, Dependency, and Realization with curved or orthogonal routing
 - 📝 **UML Members** — Add properties and methods with visibility modifiers (+, -, #, ~)
 - 🎭 **Dark Mode** — Seamless light/dark theme switching with persistent preferences
 - 📤 **Export Options** — PNG, SVG, PDF, and JSON formats with custom filenames
 - 📥 **Import Diagrams** — Load saved JSON diagram files
 - 🔄 **State Persistence** — Auto-save diagrams to browser storage
-- 🎯 **Keyboard Shortcuts** — Efficient workflow with V (select), C (connect), Space (pan)
+- 🎯 **Keyboard Shortcuts** — Efficient workflow with V (select), C (connect), R (toggle selected route), and Space (pan)
 - 📐 **Grid Snapping** — Toggle snap-to-grid for precise alignment
 - 🔍 **Zoom & Pan** — Zoom (0.2x to 3x), pan, and fit-to-content controls
 - 🎬 **Smooth Animations** — Framer Motion powered UI animations
@@ -162,12 +162,17 @@ Click the **Import** button and select a previously exported `.json` file to loa
 |-----|--------|
 | `V` | Select tool |
 | `C` | Connect tool |
-| `A` | Fit all elements to viewport (zoom to fit) |
+| `A` | Select all elements on the canvas |
+| `F` | Fit all elements to viewport (zoom to fit) |
 | `Z` | Zoom in (+10%) |
 | `X` | Zoom out (-10%) |
+| `R` | Toggle selected relationship between curved and orthogonal routing |
+| `G` | Toggle grid / snap mode |
+| `I` | Add image |
+| `U` | Undo the last diagram change |
 | `H` | Show keyboard shortcuts and help |
 | `Space` | Pan tool (hold while dragging) |
-| `Delete/Backspace` | Delete selected element or relationship |
+| `Delete/Backspace/D` | Delete selected element or relationship |
 | `Enter` | Confirm in dialogs |
 | `Esc` | Cancel dialogs, deselect |
 

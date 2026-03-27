@@ -22,6 +22,10 @@ const INITIAL_RELATIONSHIPS: Relationship[] = [];
 interface DiagramStore {
   elements: UMLElement[];
   relationships: Relationship[];
+  previousDiagram: DiagramModel | null;
+  canUndo: boolean;
+  undoCaptureKey: string | null;
+  undoCaptureAt: number;
 
   // Element CRUD
   addElement: (type: ElementType) => string;
@@ -43,15 +47,63 @@ interface DiagramStore {
   loadDiagram: (model: DiagramModel) => void;
   exportDiagram: () => DiagramModel;
   clearDiagram: () => void;
+  undoDiagram: () => void;
 }
 
 const DEFAULT_VIS: Visibility = '+';
+const UNDO_GROUP_WINDOW_MS = 450;
+
+function cloneValue<T>(value: T): T {
+  if (typeof structuredClone === 'function') return structuredClone(value);
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function createDiagramSnapshot(elements: UMLElement[], relationships: Relationship[]): DiagramModel {
+  return {
+    version: '1.0.0',
+    elements: cloneValue(elements),
+    relationships: cloneValue(relationships),
+  };
+}
+
+function nextUndoState(
+  s: DiagramStore,
+  captureKey: string,
+  force = false,
+): Pick<DiagramStore, 'previousDiagram' | 'canUndo' | 'undoCaptureKey' | 'undoCaptureAt'> {
+  const now = Date.now();
+  const reuseExisting =
+    !force &&
+    s.previousDiagram &&
+    s.undoCaptureKey === captureKey &&
+    now - s.undoCaptureAt < UNDO_GROUP_WINDOW_MS;
+
+  if (reuseExisting) {
+    return {
+      previousDiagram: s.previousDiagram,
+      canUndo: s.canUndo,
+      undoCaptureKey: s.undoCaptureKey,
+      undoCaptureAt: now,
+    };
+  }
+
+  return {
+    previousDiagram: createDiagramSnapshot(s.elements, s.relationships),
+    canUndo: true,
+    undoCaptureKey: captureKey,
+    undoCaptureAt: now,
+  };
+}
 
 export const useDiagramStore = create<DiagramStore>()(
   persist(
     (set, get) => ({
       elements: INITIAL_ELEMENTS,
       relationships: INITIAL_RELATIONSHIPS,
+      previousDiagram: null,
+      canUndo: false,
+      undoCaptureKey: null,
+      undoCaptureAt: 0,
 
       addElement: (type) => {
         const id = makeId();
@@ -85,7 +137,10 @@ export const useDiagramStore = create<DiagramStore>()(
           ...(type === 'area' ? { boxWidth: 320, boxHeight: 220, color: '#1e3a5f' } : {}),
           ...(type === 'image' ? { boxWidth: 200, boxHeight: 200 } : {}),
         };
-        set((s) => ({ elements: [...s.elements, el] }));
+        set((s) => ({
+          ...nextUndoState(s, `add-element:${type}`, true),
+          elements: [...s.elements, el],
+        }));
         return id;
       },
 
@@ -105,17 +160,22 @@ export const useDiagramStore = create<DiagramStore>()(
           methods: source.methods.map(cloneMember),
         };
 
-        set((s) => ({ elements: [...s.elements, duplicate] }));
+        set((s) => ({
+          ...nextUndoState(s, `duplicate-element:${id}`, true),
+          elements: [...s.elements, duplicate],
+        }));
         return dupId;
       },
 
       updateElement: (id, patch) =>
         set((s) => ({
+          ...nextUndoState(s, `update-element:${id}`),
           elements: s.elements.map((el) => (el.id === id ? { ...el, ...patch } : el)),
         })),
 
       deleteElement: (id) =>
         set((s) => ({
+          ...nextUndoState(s, `delete-element:${id}`, true),
           elements: s.elements.filter((el) => el.id !== id),
           relationships: s.relationships.filter(
             (r) => r.sourceId !== id && r.targetId !== id
@@ -133,6 +193,7 @@ export const useDiagramStore = create<DiagramStore>()(
           params: isMethod ? '' : undefined,
         };
         set((s) => ({
+          ...nextUndoState(s, `add-member:${elementId}:${section}`, true),
           elements: s.elements.map((el) =>
             el.id === elementId
               ? { ...el, [section]: [...el[section], member] }
@@ -144,6 +205,7 @@ export const useDiagramStore = create<DiagramStore>()(
 
       updateMember: (elementId, memberId, patch) =>
         set((s) => ({
+          ...nextUndoState(s, `update-member:${elementId}:${memberId}`),
           elements: s.elements.map((el) => {
             if (el.id !== elementId) return el;
             const mapSection = (arr: UMLMember[]) =>
@@ -158,6 +220,7 @@ export const useDiagramStore = create<DiagramStore>()(
 
       deleteMember: (elementId, memberId) =>
         set((s) => ({
+          ...nextUndoState(s, `delete-member:${elementId}:${memberId}`, true),
           elements: s.elements.map((el) => {
             if (el.id !== elementId) return el;
             return {
@@ -176,22 +239,28 @@ export const useDiagramStore = create<DiagramStore>()(
         if (exists || sourceId === targetId) return null;
         const id = makeId();
         const rel: Relationship = { id, type, sourceId, targetId, routingMode: 'curved' };
-        set((s) => ({ relationships: [...s.relationships, rel] }));
+        set((s) => ({
+          ...nextUndoState(s, `add-relationship:${sourceId}:${targetId}:${type}`, true),
+          relationships: [...s.relationships, rel],
+        }));
         return id;
       },
 
       updateRelationship: (id, patch) =>
         set((s) => ({
+          ...nextUndoState(s, `update-relationship:${id}`),
           relationships: s.relationships.map((r) => (r.id === id ? { ...r, ...patch } : r)),
         })),
 
       deleteRelationship: (id) =>
         set((s) => ({
+          ...nextUndoState(s, `delete-relationship:${id}`, true),
           relationships: s.relationships.filter((r) => r.id !== id),
         })),
 
       loadDiagram: (model) =>
         set({
+          ...nextUndoState(get(), 'load-diagram', true),
           elements: model.elements,
           relationships: model.relationships.map((r) => ({
             ...r,
@@ -205,7 +274,25 @@ export const useDiagramStore = create<DiagramStore>()(
         relationships: get().relationships,
       }),
 
-      clearDiagram: () => set({ elements: [], relationships: [] }),
+      clearDiagram: () =>
+        set((s) => ({
+          ...nextUndoState(s, 'clear-diagram', true),
+          elements: [],
+          relationships: [],
+        })),
+
+      undoDiagram: () =>
+        set((s) => {
+          if (!s.previousDiagram) return s;
+          return {
+            elements: cloneValue(s.previousDiagram.elements),
+            relationships: cloneValue(s.previousDiagram.relationships),
+            previousDiagram: null,
+            canUndo: false,
+            undoCaptureKey: null,
+            undoCaptureAt: 0,
+          };
+        }),
     }),
     {
       name: 'diagr-v1',
