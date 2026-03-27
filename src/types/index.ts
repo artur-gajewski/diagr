@@ -9,7 +9,8 @@ export type ElementType =
   | 'no'
   | 'note'
   | 'text'
-  | 'area';
+  | 'area'
+  | 'image';
 export type Visibility = '+' | '-' | '#' | '~';
 export type RelationshipType =
   | 'association'
@@ -53,6 +54,8 @@ export interface UMLElement {
   textAlign?: 'left' | 'center' | 'right';
   /** Accent color — used by the 'area' element type */
   color?: string;
+  /** Image data URL — used by the 'image' element type */
+  imageData?: string;
 }
 
 // ────────── Relationship ──────────

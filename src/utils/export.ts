@@ -128,6 +128,16 @@ export function generateSVGString(
     .join('\n');
 
   // --- Boxes ---
+  const imageSVGs = elements
+    .filter((el) => el.type === 'image')
+    .map((el) => {
+      const w = el.boxWidth ?? 200;
+      const h = el.boxHeight ?? 200;
+      if (!el.imageData) return '';
+      return `<image x="${el.x}" y="${el.y}" width="${w}" height="${h}" href="${el.imageData}" preserveAspectRatio="xMidYMid slice" />`;
+    })
+    .join('\n');
+
   const areaSVGs = elements
     .filter((el) => el.type === 'area')
     .map((el) => {
@@ -146,7 +156,7 @@ export function generateSVGString(
     .join('\n');
 
   const boxSVGs = elements
-    .filter((el) => el.type !== 'area')
+    .filter((el) => el.type !== 'area' && el.type !== 'image')
     .map((el) => {
       // ── Plain text element ──
       if (el.type === 'text') {
@@ -235,6 +245,7 @@ export function generateSVGString(
   <rect x="${minX}" y="${minY}" width="${W}" height="${H}" fill="${bg}"/>
   <defs>${defs}</defs>
   ${areaSVGs}
+  ${imageSVGs}
   ${arrowPaths}
   ${boxSVGs}
 </svg>`;

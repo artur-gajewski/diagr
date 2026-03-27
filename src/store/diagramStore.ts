@@ -66,6 +66,7 @@ export const useDiagramStore = create<DiagramStore>()(
           note:     'Note',
           text:     'Text',
           area:     'Infrastructure',
+          image:    'Image',
         };
         const el: UMLElement = {
           id,
@@ -82,6 +83,7 @@ export const useDiagramStore = create<DiagramStore>()(
           ...(type === 'condition' ? { boxWidth: 190, boxHeight: 110 } : {}),
           ...((type === 'yes' || type === 'no') ? { boxWidth: 72, boxHeight: 52 } : {}),
           ...(type === 'area' ? { boxWidth: 320, boxHeight: 220, color: '#1e3a5f' } : {}),
+          ...(type === 'image' ? { boxWidth: 200, boxHeight: 200 } : {}),
         };
         set((s) => ({ elements: [...s.elements, el] }));
         return id;

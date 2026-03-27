@@ -16,6 +16,7 @@ const EL_TYPES: { value: ElementType; label: string }[] = [
   { value: 'no',       label: 'No'       },
   { value: 'text',     label: 'Text'     },
   { value: 'area',     label: 'Area'     },
+  { value: 'image',    label: 'Image'    },
 ];
 
 const REL_TYPES: { value: RelationshipType; label: string }[] = [
@@ -188,6 +189,29 @@ function ElementPanel({ element }: { element: UMLElement }) {
         </div>
         <ActionBtn onClick={handleDuplicate} label="Duplicate Text" icon={<Copy size={14} />} />
         <DeleteBtn onClick={() => { deleteElement(element.id); selectElement(null); }} label="Delete Text" />
+      </div>
+    );
+  }
+
+  // ── Image ──
+  if (element.type === 'image') {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="aspect-video rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-800/30">
+          {element.imageData ? (
+            <img
+              src={element.imageData}
+              alt={element.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">
+              No image
+            </div>
+          )}
+        </div>
+        <ActionBtn onClick={handleDuplicate} label="Duplicate Image" icon={<Copy size={14} />} />
+        <DeleteBtn onClick={() => { deleteElement(element.id); selectElement(null); }} label="Delete Image" />
       </div>
     );
   }

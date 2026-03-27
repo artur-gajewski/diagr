@@ -5,6 +5,7 @@ import { useUIStore } from '@/store/uiStore';
 import { getBoxRect } from '@/utils/geometry';
 import { UMLBox } from './UMLBox';
 import { AreaBox } from './AreaBox';
+import { ImageBox } from './ImageBox';
 import { RelationshipArrow } from './RelationshipArrow';
 import { SvgDefs } from './SvgDefs';
 
@@ -208,7 +209,7 @@ export function DiagramCanvas({ canvasRef }: { canvasRef: React.RefObject<HTMLDi
         setSelectedElements([]);
       } else if (rect) {
         const hitIds = elements
-          .filter((el) => el.type !== 'area' && rectsIntersect(rect, getBoxRect(el)))
+          .filter((el) => el.type !== 'area' && el.type !== 'image' && rectsIntersect(rect, getBoxRect(el)))
           .map((el) => el.id);
         setSelectedElements(hitIds);
       }
@@ -273,8 +274,17 @@ export function DiagramCanvas({ canvasRef }: { canvasRef: React.RefObject<HTMLDi
           {/* UML boxes */}
           <div style={{ position: 'absolute', inset: 0, zIndex: 20, pointerEvents: 'none' }}>
             <AnimatePresence>
-              {elements.filter((el) => el.type !== 'area').map((el) => (
+              {elements.filter((el) => el.type !== 'area' && el.type !== 'image').map((el) => (
                 <UMLBox key={el.id} element={el} />
+              ))}
+            </AnimatePresence>
+          </div>
+
+          {/* Image boxes */}
+          <div style={{ position: 'absolute', inset: 0, zIndex: 20, pointerEvents: 'none' }}>
+            <AnimatePresence>
+              {elements.filter((el) => el.type === 'image').map((el) => (
+                <ImageBox key={el.id} element={el} />
               ))}
             </AnimatePresence>
           </div>

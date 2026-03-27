@@ -5,12 +5,14 @@ import {
   Link,
   Check,
   X,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { useDiagramStore } from '@/store/diagramStore';
 import { useUIStore, type Tool } from '@/store/uiStore';
 import { snapToGrid } from '@/utils/geometry';
 import type { ElementType } from '@/types';
 import { cn } from '@/lib/utils';
+import { useRef } from 'react';
 
 const ELEMENT_TYPES: { type: ElementType; label: string; icon: React.ReactNode; color: string }[] =
   [
@@ -28,6 +30,7 @@ const EXTRA_TYPES: { type: ElementType; label: string; icon: React.ReactNode; co
       { type: 'condition',label: 'Condition',icon: <span className="w-4 h-4 rounded-sm border border-slate-300 bg-white block flex-shrink-0" />, color: 'text-slate-500'  },
       { type: 'yes',      label: 'Yes',      icon: <span className="w-4 h-4 rounded-sm bg-green-500 flex items-center justify-center text-white"><Check size={12} strokeWidth={3} /></span>, color: 'text-green-500'  },
       { type: 'no',       label: 'No',       icon: <span className="w-4 h-4 rounded-sm bg-rose-500 flex items-center justify-center text-white"><X size={12} strokeWidth={3} /></span>, color: 'text-rose-500'  },
+      { type: 'area',     label: 'Area',     icon: <span className="w-4 h-4 rounded-sm border-2 border-dashed border-blue-900 block flex-shrink-0" />, color: 'text-blue-900'  },
     ];
 
 const TOOLS: { tool: Tool; icon: React.ReactNode; label: string }[] = [
@@ -38,6 +41,7 @@ const TOOLS: { tool: Tool; icon: React.ReactNode; label: string }[] = [
 
 export function Toolbar() {
   const { tool, setTool, setPendingRelType, selectElement, setIsDashedMode, snapToGrid: snapEnabled } = useUIStore();
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const handleAddElement = (type: ElementType) => {
     const { addElement, updateElement } = useDiagramStore.getState();
@@ -50,6 +54,34 @@ export function Toolbar() {
     }
     selectElement(id);
     setTool('select');
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      const { addElement, updateElement } = useDiagramStore.getState();
+      const id = addElement('image');
+      if (snapEnabled) {
+        const created = useDiagramStore.getState().elements.find((el) => el.id === id);
+        if (created) {
+          updateElement(id, {
+            x: snapToGrid(created.x),
+            y: snapToGrid(created.y),
+            imageData: dataUrl,
+          });
+        }
+      } else {
+        updateElement(id, { imageData: dataUrl });
+      }
+      selectElement(id);
+      setTool('select');
+    };
+    reader.readAsDataURL(file);
+    if (imageInputRef.current) imageInputRef.current.value = '';
   };
 
   return (
@@ -106,6 +138,20 @@ export function Toolbar() {
               {icon}
             </ToolButton>
         ))}
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml"
+          onChange={handleImageUpload}
+          style={{ display: 'none' }}
+        />
+        <ToolButton
+          title="Add Image"
+          onClick={() => imageInputRef.current?.click()}
+          className="text-slate-600"
+        >
+          <ImageIcon size={16} />
+        </ToolButton>
       </Section>
 
     </motion.aside>
