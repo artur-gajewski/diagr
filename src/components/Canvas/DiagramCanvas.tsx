@@ -1,4 +1,4 @@
-import { createContext, useRef, useCallback, useEffect, useState } from 'react';
+import { createContext, useRef, useCallback, useEffect, useState, useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useDiagramStore } from '@/store/diagramStore';
 import { useUIStore } from '@/store/uiStore';
@@ -31,6 +31,26 @@ export function DiagramCanvas({ canvasRef }: { canvasRef: React.RefObject<HTMLDi
   const viewportRef = useRef<HTMLDivElement>(null);
   const toolBeforeSpace = useRef<typeof tool | null>(null);
   const [marqueeRect, setMarqueeRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+
+  const relationshipRouteMeta = useMemo(() => {
+    const byPair = new Map<string, string[]>();
+    relationships.forEach((r) => {
+      const [a, b] = [r.sourceId, r.targetId].sort((x, y) => x.localeCompare(y));
+      const key = `${a}::${b}`;
+      const ids = byPair.get(key);
+      if (ids) ids.push(r.id);
+      else byPair.set(key, [r.id]);
+    });
+
+    const meta = new Map<string, { routeIndex: number; routeCount: number }>();
+    byPair.forEach((ids) => {
+      ids.forEach((id, idx) => {
+        meta.set(id, { routeIndex: idx, routeCount: ids.length });
+      });
+    });
+
+    return meta;
+  }, [relationships]);
 
   // ── Spacebar → temporary pan mode ──
   useEffect(() => {
@@ -228,7 +248,13 @@ export function DiagramCanvas({ canvasRef }: { canvasRef: React.RefObject<HTMLDi
                         zIndex: 10, color: isDark ? '#94a3b8' : '#475569', overflow: 'visible' }}>
             <SvgDefs />
             {relationships.map((r) => (
-              <RelationshipArrow key={r.id} relationship={r} elements={elements} />
+              <RelationshipArrow
+                key={r.id}
+                relationship={r}
+                elements={elements}
+                routeIndex={relationshipRouteMeta.get(r.id)?.routeIndex ?? 0}
+                routeCount={relationshipRouteMeta.get(r.id)?.routeCount ?? 1}
+              />
             ))}
           </svg>
 

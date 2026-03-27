@@ -102,8 +102,11 @@ export function generateSVGString(
       const srcRect = getBoxRect(src);
       const tgtRect = getBoxRect(tgt);
       const { srcSide, tgtSide } = bestAnchorPair(srcRect, tgtRect);
-      const start = getAnchorPoint(srcRect, srcSide);
-      const end = getAnchorPoint(tgtRect, tgtSide);
+      const markerPad = 6;
+      const startRaw = getAnchorPoint(srcRect, srcSide);
+      const endRaw = getAnchorPoint(tgtRect, tgtSide);
+      const start = offsetOutsideBox(startRaw, srcSide, r.type === 'composition' || r.type === 'aggregation' ? markerPad : 2);
+      const end = offsetOutsideBox(endRaw, tgtSide, markerPad);
       const d = buildBezierPath(start, end, srcSide, tgtSide);
       const color = relationColorSVG(r.type);
       const dashed = r.isDashed ?? (r.type === 'dependency' || r.type === 'realization');
@@ -306,6 +309,23 @@ function outwardControl(p: { x: number; y: number }, side: 'top' | 'right' | 'bo
       return { x: p.x - offset, y: p.y };
     case 'right':
       return { x: p.x + offset, y: p.y };
+  }
+}
+
+function offsetOutsideBox(
+  point: { x: number; y: number },
+  side: 'top' | 'right' | 'bottom' | 'left',
+  distance: number
+) {
+  switch (side) {
+    case 'top':
+      return { x: point.x, y: point.y - distance };
+    case 'bottom':
+      return { x: point.x, y: point.y + distance };
+    case 'left':
+      return { x: point.x - distance, y: point.y };
+    case 'right':
+      return { x: point.x + distance, y: point.y };
   }
 }
 
