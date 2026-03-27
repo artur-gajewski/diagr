@@ -21,16 +21,15 @@ const ELEMENT_TYPES: { type: ElementType; label: string; icon: React.ReactNode; 
     { type: 'database', label: 'Database', icon: <span className="w-4 h-4 rounded-sm bg-emerald-500 block flex-shrink-0" />, color: 'text-emerald-500' },
     { type: 'service',  label: 'Service',  icon: <span className="w-4 h-4 rounded-sm bg-violet-500  block flex-shrink-0" />, color: 'text-violet-500'  },
     { type: 'object',   label: 'Object',   icon: <span className="w-4 h-4 rounded-sm bg-orange-500  block flex-shrink-0" />, color: 'text-orange-500'  },
+    { type: 'note',     label: 'Note',     icon: <span className="w-4 h-4 rounded-sm bg-yellow-400  block flex-shrink-0" />, color: 'text-yellow-500'  },
   ];
 
 const EXTRA_TYPES: { type: ElementType; label: string; icon: React.ReactNode; color: string }[] =
     [
       { type: 'text',     label: 'Text',     icon: <span className="text-sm font-bold leading-none">A</span>, color: 'text-slate-500'   },
-      { type: 'note',     label: 'Note',     icon: <span className="w-4 h-4 rounded-sm bg-yellow-400  block flex-shrink-0" />, color: 'text-yellow-500'  },
       { type: 'condition',label: 'Condition',icon: <span className="w-4 h-4 rounded-sm border border-slate-300 bg-white block flex-shrink-0" />, color: 'text-slate-500'  },
       { type: 'yes',      label: 'Yes',      icon: <span className="w-4 h-4 rounded-sm bg-green-500 flex items-center justify-center text-white"><Check size={12} strokeWidth={3} /></span>, color: 'text-green-500'  },
       { type: 'no',       label: 'No',       icon: <span className="w-4 h-4 rounded-sm bg-rose-500 flex items-center justify-center text-white"><X size={12} strokeWidth={3} /></span>, color: 'text-rose-500'  },
-      { type: 'area',     label: 'Area',     icon: <span className="w-4 h-4 rounded-sm border-2 border-dashed border-blue-900 block flex-shrink-0" />, color: 'text-blue-900'  },
     ];
 
 const TOOLS: { tool: Tool; icon: React.ReactNode; label: string }[] = [
@@ -89,69 +88,75 @@ export function Toolbar() {
       initial={{ x: -80, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="flex flex-col gap-1 p-2 w-14 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 z-50 overflow-y-auto scrollbar-hide"
+      className="flex flex-col gap-2 p-2 w-32 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 z-50 overflow-y-auto scrollbar-hide"
     >
       {/* Tool selector */}
       <Section label="Tools">
-        {TOOLS.map(({ tool: t, icon, label }) => (
-          <ToolButton
-            key={t}
-            active={tool === t}
-            title={label}
-            onClick={() => {
-              setIsDashedMode(false);
-              setTool(t);
-            }}
-          >
-            {icon}
-          </ToolButton>
-        ))}
+        <div className="grid grid-cols-2 gap-1">
+          {TOOLS.map(({ tool: t, icon, label }) => (
+            <ToolButton
+              key={t}
+              active={tool === t}
+              title={label}
+              onClick={() => {
+                setIsDashedMode(false);
+                setTool(t);
+              }}
+            >
+              {icon}
+            </ToolButton>
+          ))}
+        </div>
       </Section>
 
       <Divider />
 
       {/* Add elements */}
-      <Section label="Add">
-        {ELEMENT_TYPES.map(({ type, label, icon, color }) => (
-          <ToolButton
-            key={type}
-            title={`Add ${label}`}
-            onClick={() => handleAddElement(type)}
-            className={color}
-          >
-            {icon}
-          </ToolButton>
-        ))}
+      <Section label="Objects">
+        <div className="grid grid-cols-2 gap-1">
+          {ELEMENT_TYPES.map(({ type, label, icon, color }) => (
+            <ToolButton
+              key={type}
+              title={`Add ${label}`}
+              onClick={() => handleAddElement(type)}
+              className={color}
+            >
+              {icon}
+            </ToolButton>
+          ))}
+        </div>
       </Section>
 
       <Divider />
 
       {/* Add elements */}
       <Section label="Other">
-        {EXTRA_TYPES.map(({ type, label, icon, color }) => (
-            <ToolButton
-                key={type}
-                title={`Add ${label}`}
-                onClick={() => handleAddElement(type)}
-                className={color}
-            >
-              {icon}
-            </ToolButton>
-        ))}
-        <input
-          ref={imageInputRef}
-          type="file"
-          accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml"
-          onChange={handleImageUpload}
-          style={{ display: 'none' }}
-        />
-        <ToolButton
-          title="Add Image"
-          onClick={() => imageInputRef.current?.click()}
-          className="text-slate-600"
-        >
-          <ImageIcon size={16} />
-        </ToolButton>
+        <div className="grid grid-cols-2 gap-1">
+          {EXTRA_TYPES.map(({ type, label, icon, color }) => (
+              <ToolButton
+                  key={type}
+                  title={`Add ${label}`}
+                  onClick={() => handleAddElement(type)}
+                  className={color}
+              >
+                {icon}
+              </ToolButton>
+          ))}
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml"
+            onChange={handleImageUpload}
+            style={{ display: 'none' }}
+          />
+          <ToolButton
+            title="Add Image"
+            onClick={() => imageInputRef.current?.click()}
+            className="text-slate-600"
+          >
+            <ImageIcon size={16} />
+          </ToolButton>
+        </div>
       </Section>
 
     </motion.aside>
@@ -160,8 +165,8 @@ export function Toolbar() {
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <span className="text-[8px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-600 px-1 pt-1">
+    <div className="flex flex-col gap-1">
+      <span className="text-[8px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-600 px-1 pt-0.5">
         {label}
       </span>
       {children}
