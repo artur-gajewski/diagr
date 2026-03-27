@@ -25,6 +25,8 @@ export function AreaBox({ element }: AreaBoxProps) {
     selectedElementId,
     selectedElementIds,
     selectElement,
+    setSelectedElements,
+    setModifierSelectedElements,
     tool,
     snapToGrid: snapEnabled,
   } = useUIStore();
@@ -32,6 +34,7 @@ export function AreaBox({ element }: AreaBoxProps) {
 
   const suppressNextClickRef = useRef(false);
   const dragMovedRef = useRef(false);
+  const ctrlSelectionWasInRef = useRef(false);
 
   const isSelected =
     selectedElementId === element.id || selectedElementIds.includes(element.id);
@@ -44,11 +47,30 @@ export function AreaBox({ element }: AreaBoxProps) {
   const handleMouseDown = (e: React.MouseEvent) => {
     if (tool === 'connect' || tool === 'dashed_connect' || e.button !== 0) return;
     e.stopPropagation();
+
+    // ── Ctrl/Cmd+click: add to multi-selection ──
+    if (e.ctrlKey || e.metaKey) {
+      const currentIds = useUIStore.getState().selectedElementIds;
+      ctrlSelectionWasInRef.current = currentIds.includes(element.id);
+      if (!ctrlSelectionWasInRef.current) {
+        setModifierSelectedElements([...currentIds, element.id]);
+      }
+    }
+
     const sx = e.clientX;
     const sy = e.clientY;
     dragMovedRef.current = false;
-    const origX = element.x;
-    const origY = element.y;
+
+    // Use fresh state so Ctrl-updated selection is included in the drag.
+    const freshIds = useUIStore.getState().selectedElementIds;
+    const moveIds = freshIds.includes(element.id) ? [...freshIds] : [element.id];
+    const snapshot = new Map(
+      useDiagramStore
+        .getState()
+        .elements
+        .filter((el) => moveIds.includes(el.id))
+        .map((el) => [el.id, { x: el.x, y: el.y }])
+    );
 
     const onMove = (ev: MouseEvent) => {
       if (!dragMovedRef.current) {
@@ -58,11 +80,15 @@ export function AreaBox({ element }: AreaBoxProps) {
       }
       const dx = (ev.clientX - sx) / zoom;
       const dy = (ev.clientY - sy) / zoom;
-      const nextX = origX + dx;
-      const nextY = origY + dy;
-      updateElement(element.id, {
-        x: snapEnabled ? snapFn(nextX) : nextX,
-        y: snapEnabled ? snapFn(nextY) : nextY,
+      moveIds.forEach((id) => {
+        const origin = snapshot.get(id);
+        if (!origin) return;
+        const nextX = origin.x + dx;
+        const nextY = origin.y + dy;
+        updateElement(id, {
+          x: snapEnabled ? snapFn(nextX) : nextX,
+          y: snapEnabled ? snapFn(nextY) : nextY,
+        });
       });
     };
     const onUp = () => {
@@ -81,7 +107,16 @@ export function AreaBox({ element }: AreaBoxProps) {
       suppressNextClickRef.current = false;
       return;
     }
-    selectElement(isSelected ? null : element.id);
+    if (e.ctrlKey || e.metaKey) {
+      // If element was already selected before mousedown → toggle it off
+      if (ctrlSelectionWasInRef.current) {
+        const currentIds = useUIStore.getState().selectedElementIds;
+        setModifierSelectedElements(currentIds.filter((id) => id !== element.id));
+      }
+      ctrlSelectionWasInRef.current = false;
+    } else {
+      selectElement(isSelected ? null : element.id);
+    }
   };
 
   // ── Resize (bottom-right corner) ──
@@ -126,10 +161,13 @@ export function AreaBox({ element }: AreaBoxProps) {
         pointerEvents: 'auto',
         borderRadius: 12,
         border: `2px dashed ${color}`,
-        background: hexToRgba(color, 0.06),
+        background: hexToRgba(color, isSelected ? 0.1 : 0.06),
         boxSizing: 'border-box',
-        outline: isSelected ? `2px solid ${color}` : 'none',
+        outline: isSelected ? '3px solid rgba(56, 189, 248, 0.85)' : 'none',
         outlineOffset: 3,
+        boxShadow: isSelected
+          ? '0 0 0 7px rgba(56, 189, 248, 0.16), 0 14px 30px rgba(15, 23, 42, 0.12)'
+          : 'none',
       }}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
@@ -145,7 +183,11 @@ export function AreaBox({ element }: AreaBoxProps) {
           fontWeight: 700,
           letterSpacing: '0.04em',
           textTransform: 'uppercase',
-          opacity: 0.85,
+          opacity: isSelected ? 1 : 0.85,
+          background: isSelected ? 'rgba(255,255,255,0.78)' : 'transparent',
+          padding: isSelected ? '2px 8px' : '0',
+          borderRadius: isSelected ? 999 : 0,
+          boxShadow: isSelected ? '0 1px 2px rgba(15, 23, 42, 0.08)' : 'none',
           pointerEvents: 'none',
           userSelect: 'none',
         }}

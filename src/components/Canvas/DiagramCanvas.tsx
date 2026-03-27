@@ -154,7 +154,8 @@ export function DiagramCanvas({ canvasRef }: { canvasRef: React.RefObject<HTMLDi
 
     if (e.button === 0) {
       // Only clear selection/connect source on true canvas background clicks.
-      if (hitBackground) {
+      // Preserve selection when Ctrl/Cmd is held so Ctrl+clicking multiple elements works.
+      if (hitBackground && !e.ctrlKey && !e.metaKey) {
         selectElement(null);
         selectRelationship(null);
         setConnectSource(null);

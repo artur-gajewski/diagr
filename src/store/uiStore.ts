@@ -30,6 +30,7 @@ interface UIStore {
   // Actions
   selectElement: (id: string | null) => void;
   setSelectedElements: (ids: string[]) => void;
+  setModifierSelectedElements: (ids: string[]) => void;
   selectRelationship: (id: string | null) => void;
   setTool: (tool: Tool) => void;
   setPendingRelType: (type: RelationshipType) => void;
@@ -68,6 +69,13 @@ export const useUIStore = create<UIStore>((set) => ({
   setSelectedElements: (ids) =>
     set({
       selectedElementId: ids[0] ?? null,
+      selectedElementIds: ids,
+      selectedRelationshipId: null,
+    }),
+
+  setModifierSelectedElements: (ids) =>
+    set({
+      selectedElementId: null,
       selectedElementIds: ids,
       selectedRelationshipId: null,
     }),

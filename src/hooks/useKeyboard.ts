@@ -61,7 +61,7 @@ export function useKeyboard() {
       }
 
       // Delete selected elements/relationships
-      if (key === 'delete' || key === 'backspace') {
+      if (key === 'delete' || key === 'backspace' || key === 'd') {
         e.preventDefault();
         if (selectedElementIds.length > 0) {
           selectedElementIds.forEach((id) => deleteElement(id));

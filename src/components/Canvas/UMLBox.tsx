@@ -18,6 +18,9 @@ const BOX_GRADIENT: Record<string, string> = {
   no:       'from-rose-500 to-rose-700',
 };
 
+const SELECTED_RING = 'ring-4 ring-sky-400/80 ring-offset-2 ring-offset-slate-50 dark:ring-sky-300/80 dark:ring-offset-slate-950 shadow-[0_0_0_4px_rgba(56,189,248,0.16)]';
+const CONNECT_RING = 'ring-2 ring-amber-400 ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-950';
+
 
 
 // ── Note Box ──────────────────────────────────────────────────
@@ -48,9 +51,13 @@ function NoteBox({
     document.addEventListener('mouseup', onUp);
   };
 
-  const ring = isSelected || isConnectSource
-    ? 'ring-2 ring-amber-400 ring-offset-1'
-    : tool === 'connect' ? 'hover:ring-2 hover:ring-amber-300 hover:ring-offset-1' : '';
+  const ring = isSelected
+    ? SELECTED_RING
+    : isConnectSource
+      ? CONNECT_RING
+      : tool === 'connect'
+        ? 'hover:ring-2 hover:ring-amber-300 hover:ring-offset-1'
+        : '';
 
   return (
     <motion.div
@@ -60,7 +67,11 @@ function NoteBox({
                cursor: tool === 'connect' ? 'crosshair' : 'default',
                zIndex: isSelected ? 30 : 20, userSelect: 'none', pointerEvents: 'auto',
                display: 'flex', flexDirection: 'column' }}
-      className={cn('rounded-xl shadow-md border border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-950/40 overflow-hidden', ring)}
+      className={cn(
+        'rounded-xl border border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-950/40 overflow-hidden transition-shadow',
+        isSelected ? 'shadow-xl shadow-sky-200/60 dark:shadow-sky-950/30' : 'shadow-md',
+        ring,
+      )}
       onClick={onClick}
     >
       <div onMouseDown={onMouseDown}
@@ -118,10 +129,10 @@ function TextBox({
   const textRef = useRef<HTMLDivElement>(null);
 
   const ring = isConnectSource
-    ? 'outline outline-2 outline-amber-400'
+    ? 'rounded-md outline outline-2 outline-amber-400'
     : isSelected
-    ? 'outline outline-1 outline-blue-400/80'
-    : (tool === 'connect' || tool === 'dashed_connect') ? 'hover:outline hover:outline-1 hover:outline-blue-300/70' : '';
+      ? 'rounded-md outline outline-2 outline-sky-500/90 bg-sky-50/70 dark:bg-sky-950/30 shadow-[0_0_0_3px_rgba(14,165,233,0.18)]'
+      : (tool === 'connect' || tool === 'dashed_connect') ? 'hover:rounded-md hover:outline hover:outline-1 hover:outline-blue-300/70' : '';
 
   // Keep the element hitbox aligned with the rendered text size (for selection, drag, and relationships).
   useLayoutEffect(() => {
@@ -171,7 +182,7 @@ function TextBox({
         userSelect: 'none',
         pointerEvents: 'auto',
       }}
-      className={cn('overflow-visible inline-block', ring)}
+      className={cn('overflow-visible inline-block transition-shadow', ring)}
       onMouseDown={onMouseDown}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
@@ -233,10 +244,11 @@ interface UMLBoxProps { element: UMLElement }
 
 export function UMLBox({ element }: UMLBoxProps) {
   const { updateElement, deleteElement, addRelationship, updateRelationship } = useDiagramStore();
-  const { selectedElementId, selectedElementIds, selectElement, tool, connectSourceId, setConnectSource, pendingRelType, snapToGrid: snapEnabled } = useUIStore();
+  const { selectedElementId, selectedElementIds, selectElement, setSelectedElements, setModifierSelectedElements, tool, connectSourceId, setConnectSource, pendingRelType, snapToGrid: snapEnabled } = useUIStore();
   const { zoom } = useContext(CanvasContext);
   const suppressNextClickRef = useRef(false);
   const dragMovedRef = useRef(false);
+  const ctrlSelectionWasInRef = useRef(false);
 
   const isSelected      = selectedElementId === element.id || selectedElementIds.includes(element.id);
   const isConnectSource = connectSourceId   === element.id;
@@ -248,12 +260,23 @@ export function UMLBox({ element }: UMLBoxProps) {
   const handleMouseDown = (e: React.MouseEvent) => {
     if (tool === 'connect' || tool === 'dashed_connect' || e.button !== 0) return;
     e.stopPropagation();
+
+    // ── Ctrl/Cmd+click: add to multi-selection ──
+    if (e.ctrlKey || e.metaKey) {
+      const currentIds = useUIStore.getState().selectedElementIds;
+      ctrlSelectionWasInRef.current = currentIds.includes(element.id);
+      if (!ctrlSelectionWasInRef.current) {
+        setModifierSelectedElements([...currentIds, element.id]);
+      }
+    }
+
     const sx = e.clientX;
     const sy = e.clientY;
     dragMovedRef.current = false;
 
-    // If the dragged box is part of current multi-selection, move the entire selection together.
-    const moveIds = selectedElementIds.includes(element.id) ? selectedElementIds : [element.id];
+    // Always read fresh state so Ctrl-updated selection is included.
+    const freshIds = useUIStore.getState().selectedElementIds;
+    const moveIds = freshIds.includes(element.id) ? [...freshIds] : [element.id];
     const snapshot = new Map(
       useDiagramStore
         .getState()
@@ -298,13 +321,20 @@ export function UMLBox({ element }: UMLBoxProps) {
     }
     if (tool === 'connect' || tool === 'dashed_connect') {
       if (!connectSourceId)                    { setConnectSource(element.id); }
-      else if (connectSourceId !== element.id) { 
+      else if (connectSourceId !== element.id) {
         const relId = addRelationship(connectSourceId, element.id, pendingRelType);
         if (relId && tool === 'dashed_connect') {
           updateRelationship(relId, { isDashed: true });
         }
         setConnectSource(null);
       }
+    } else if (e.ctrlKey || e.metaKey) {
+      // Ctrl+click: if element was already in selection before mousedown → remove it; otherwise mousedown already added it.
+      if (ctrlSelectionWasInRef.current) {
+        const currentIds = useUIStore.getState().selectedElementIds;
+        setModifierSelectedElements(currentIds.filter((id) => id !== element.id));
+      }
+      ctrlSelectionWasInRef.current = false;
     } else {
       selectElement(isSelected ? null : element.id);
     }
@@ -357,10 +387,8 @@ export function UMLBox({ element }: UMLBoxProps) {
   const isYesNo = element.type === 'yes' || element.type === 'no';
 
   const ring = isSelected
-    ? (isCondition
-      ? 'ring-2 ring-blue-400/70 ring-offset-1 ring-offset-transparent'
-      : 'ring-2 ring-white/60 ring-offset-2 ring-offset-transparent')
-    : isConnectSource ? 'ring-2 ring-amber-400 ring-offset-1'
+    ? SELECTED_RING
+    : isConnectSource ? CONNECT_RING
     : (tool === 'connect' || tool === 'dashed_connect')
       ? (isCondition ? 'hover:ring-2 hover:ring-blue-300/60 hover:ring-offset-1' : 'hover:ring-2 hover:ring-white/40 hover:ring-offset-1')
       : '';
@@ -383,9 +411,10 @@ export function UMLBox({ element }: UMLBoxProps) {
       transition={{ type: 'spring', stiffness: 400, damping: 28 }}
       style={boxStyle}
       className={cn(
-        'shadow-lg overflow-hidden select-none',
+        'overflow-hidden select-none transition-shadow',
         isCondition ? 'rounded-xl bg-white border-2 border-slate-300 dark:border-slate-500' : 'rounded-xl bg-gradient-to-br',
         !isCondition && gradient,
+        isSelected ? 'shadow-2xl shadow-sky-300/30 dark:shadow-sky-950/30' : 'shadow-lg',
         ring,
       )}
       onMouseDown={handleMouseDown}
