@@ -28,7 +28,7 @@ import {
   exportSVGGenerated,
   importJSON,
 } from '@/utils/export';
-import { getBoxRect, bestAnchorPair, getAnchorPoint } from '@/utils/geometry';
+import { calculateFitToContent } from '@/utils/geometry';
 import { cn } from '@/lib/utils';
 
 interface TopBarProps {
@@ -84,84 +84,16 @@ export function TopBar({ canvasRef }: TopBarProps) {
   };
 
   const fitToContent = () => {
-    if (elements.length === 0) {
-      resetView();
-      return;
-    }
-
-    let minX = Number.POSITIVE_INFINITY;
-    let minY = Number.POSITIVE_INFINITY;
-    let maxX = Number.NEGATIVE_INFINITY;
-    let maxY = Number.NEGATIVE_INFINITY;
-
-    const includePoint = (x: number, y: number) => {
-      minX = Math.min(minX, x);
-      minY = Math.min(minY, y);
-      maxX = Math.max(maxX, x);
-      maxY = Math.max(maxY, y);
-    };
-
-    const includeRect = (x: number, y: number, w: number, h: number) => {
-      includePoint(x, y);
-      includePoint(x + w, y + h);
-    };
-
-    elements.forEach((el) => {
-      const r = getBoxRect(el);
-      includeRect(r.x, r.y, r.width, r.height);
-    });
-
-    const elMap = new Map(elements.map((e) => [e.id, e]));
-    const CTRL_OFFSET = 80;
-    const outwardControl = (p: { x: number; y: number }, side: 'top' | 'right' | 'bottom' | 'left') => {
-      switch (side) {
-        case 'top':
-          return { x: p.x, y: p.y - CTRL_OFFSET };
-        case 'bottom':
-          return { x: p.x, y: p.y + CTRL_OFFSET };
-        case 'left':
-          return { x: p.x - CTRL_OFFSET, y: p.y };
-        case 'right':
-          return { x: p.x + CTRL_OFFSET, y: p.y };
-      }
-    };
-
-    relationships.forEach((r) => {
-      const src = elMap.get(r.sourceId);
-      const tgt = elMap.get(r.targetId);
-      if (!src || !tgt) return;
-      const srcRect = getBoxRect(src);
-      const tgtRect = getBoxRect(tgt);
-      const { srcSide, tgtSide } = bestAnchorPair(srcRect, tgtRect);
-      const start = getAnchorPoint(srcRect, srcSide);
-      const end = getAnchorPoint(tgtRect, tgtSide);
-      const cp1 = outwardControl(start, srcSide);
-      const cp2 = outwardControl(end, tgtSide);
-      includePoint(start.x, start.y);
-      includePoint(end.x, end.y);
-      includePoint(cp1.x, cp1.y);
-      includePoint(cp2.x, cp2.y);
-    });
-
-    const contentW = Math.max(1, maxX - minX);
-    const contentH = Math.max(1, maxY - minY);
-    const padX = Math.max(16, contentW * 0.1);
-    const padY = Math.max(16, contentH * 0.1);
-    const boundsMinX = minX - padX;
-    const boundsMinY = minY - padY;
-    const boundsW = contentW + padX * 2;
-    const boundsH = contentH + padY * 2;
-
     const vp = canvasRef.current?.parentElement;
     const rect = vp?.getBoundingClientRect();
     const vw = rect?.width ?? window.innerWidth;
     const vh = rect?.height ?? window.innerHeight;
-    if (vw <= 0 || vh <= 0) return;
-
-    const nextZoom = Math.min(3, Math.max(0.2, Math.min(vw / boundsW, vh / boundsH)));
-    const nextPanX = (vw - boundsW * nextZoom) / 2 - boundsMinX * nextZoom;
-    const nextPanY = (vh - boundsH * nextZoom) / 2 - boundsMinY * nextZoom;
-
+    const { zoom: nextZoom, panX: nextPanX, panY: nextPanY } = calculateFitToContent(
+      elements,
+      relationships,
+      vw,
+      vh,
+    );
     setZoom(nextZoom);
     setPan(nextPanX, nextPanY);
   };
@@ -563,6 +495,12 @@ export function TopBar({ canvasRef }: TopBarProps) {
                   </div>
                   <div className="flex items-start gap-3">
                     <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-nowrap">
+                      R
+                    </kbd>
+                    <span className="text-slate-600 dark:text-slate-400">Toggle selected relationship between curved and orthogonal routing</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-nowrap">
                       Esc
                     </kbd>
                     <span className="text-slate-600 dark:text-slate-400">Deselect all, close dialogs, return to select tool</span>
@@ -585,6 +523,7 @@ export function TopBar({ canvasRef }: TopBarProps) {
                   <li>Click elements to select them and edit properties in the right panel</li>
                   <li>Drag elements to move them around the canvas</li>
                   <li>Use the left toolbar to add new elements</li>
+                  <li>Use the ∿ / ┐ toolbar button to set the default routing mode for new relationships</li>
                   <li>Toggle snap-to-grid in the top bar for precise alignment</li>
                   <li>Export diagrams as PNG, SVG, PDF, or JSON with custom filenames</li>
                   <li>Import previously saved JSON diagrams</li>

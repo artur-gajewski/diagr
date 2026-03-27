@@ -28,6 +28,11 @@ const REL_TYPES: { value: RelationshipType; label: string }[] = [
   { value: 'realization', label: 'Realization' },
 ];
 
+const ROUTING_TYPES = [
+  { value: 'curved', label: 'Curved' },
+  { value: 'orthogonal', label: 'Orthogonal (H/V)' },
+];
+
 // ────────── Field wrapper ──────────
 function Field({
   label,
@@ -277,6 +282,18 @@ function RelationshipPanel({ relationship }: { relationship: Relationship }) {
             updateRelationship(relationship.id, { type: e.target.value as RelationshipType })
           }
           options={REL_TYPES}
+        />
+      </Field>
+
+      <Field label="Routing">
+        <Select
+          value={relationship.routingMode ?? 'curved'}
+          onChange={(e) =>
+            updateRelationship(relationship.id, {
+              routingMode: e.target.value as Relationship['routingMode'],
+            })
+          }
+          options={ROUTING_TYPES}
         />
       </Field>
 

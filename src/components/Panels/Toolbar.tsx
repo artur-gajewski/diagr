@@ -39,7 +39,16 @@ const TOOLS: { tool: Tool; icon: React.ReactNode; label: string }[] = [
 ];
 
 export function Toolbar() {
-  const { tool, setTool, setPendingRelType, selectElement, setIsDashedMode, snapToGrid: snapEnabled } = useUIStore();
+  const {
+    tool,
+    setTool,
+    setPendingRelType,
+    selectElement,
+    setIsDashedMode,
+    defaultRelationshipRoutingMode,
+    toggleDefaultRelationshipRoutingMode,
+    snapToGrid: snapEnabled,
+  } = useUIStore();
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   const handleAddElement = (type: ElementType) => {
@@ -106,6 +115,16 @@ export function Toolbar() {
               {icon}
             </ToolButton>
           ))}
+          <ToolButton
+            title={`Default relationship routing: ${defaultRelationshipRoutingMode === 'curved' ? 'Curved' : 'Orthogonal'} (toggle)`}
+            active={defaultRelationshipRoutingMode === 'orthogonal'}
+            onClick={toggleDefaultRelationshipRoutingMode}
+            className="text-slate-600 dark:text-slate-300"
+          >
+            <span className="text-sm font-semibold leading-none">
+              {defaultRelationshipRoutingMode === 'curved' ? '∿' : '┐'}
+            </span>
+          </ToolButton>
         </div>
       </Section>
 

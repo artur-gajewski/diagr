@@ -5,6 +5,7 @@ import { useUIStore } from '@/store/uiStore';
 export function useKeyboard() {
   const deleteElement = useDiagramStore((s) => s.deleteElement);
   const deleteRelationship = useDiagramStore((s) => s.deleteRelationship);
+  const updateRelationship = useDiagramStore((s) => s.updateRelationship);
   const elements = useDiagramStore((s) => s.elements);
   const relationships = useDiagramStore((s) => s.relationships);
   const { selectedElementId, selectedElementIds, selectedRelationshipId, selectElement, selectRelationship, setTool, setSelectedElements, fitToContent, zoom, zoomAtViewportCenter, snapToGrid, setSnapToGrid } =
@@ -98,6 +99,17 @@ export function useKeyboard() {
         }
       }
 
+      // Toggle selected relationship routing (R)
+      if (key === 'r' && selectedRelationshipId) {
+        e.preventDefault();
+        const relationship = relationships.find((r) => r.id === selectedRelationshipId);
+        if (relationship) {
+          updateRelationship(selectedRelationshipId, {
+            routingMode: relationship.routingMode === 'orthogonal' ? 'curved' : 'orthogonal',
+          });
+        }
+      }
+
       if (key === 'escape') {
         selectElement(null);
         selectRelationship(null);
@@ -117,6 +129,7 @@ export function useKeyboard() {
     snapToGrid,
     deleteElement,
     deleteRelationship,
+    updateRelationship,
     selectElement,
     selectRelationship,
     setSelectedElements,

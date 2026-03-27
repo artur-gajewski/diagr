@@ -19,6 +19,7 @@ export type RelationshipType =
   | 'aggregation'
   | 'dependency'
   | 'realization';
+export type RelationshipRoutingMode = 'curved' | 'orthogonal';
 
 // ────────── UML Members ──────────
 export interface UMLMember {
@@ -68,6 +69,7 @@ export interface Relationship {
   sourceMultiplicity?: string;
   targetMultiplicity?: string;
   isDashed?: boolean;
+  routingMode?: RelationshipRoutingMode;
 }
 
 // ────────── Diagram snapshot (for import/export) ──────────

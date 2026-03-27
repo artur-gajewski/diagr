@@ -175,7 +175,7 @@ export const useDiagramStore = create<DiagramStore>()(
         );
         if (exists || sourceId === targetId) return null;
         const id = makeId();
-        const rel: Relationship = { id, type, sourceId, targetId };
+        const rel: Relationship = { id, type, sourceId, targetId, routingMode: 'curved' };
         set((s) => ({ relationships: [...s.relationships, rel] }));
         return id;
       },
@@ -191,7 +191,13 @@ export const useDiagramStore = create<DiagramStore>()(
         })),
 
       loadDiagram: (model) =>
-        set({ elements: model.elements, relationships: model.relationships }),
+        set({
+          elements: model.elements,
+          relationships: model.relationships.map((r) => ({
+            ...r,
+            routingMode: r.routingMode ?? 'curved',
+          })),
+        }),
 
       exportDiagram: () => ({
         version: '1.0.0',

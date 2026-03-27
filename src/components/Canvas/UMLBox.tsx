@@ -244,7 +244,7 @@ interface UMLBoxProps { element: UMLElement }
 
 export function UMLBox({ element }: UMLBoxProps) {
   const { updateElement, deleteElement, addRelationship, updateRelationship } = useDiagramStore();
-  const { selectedElementId, selectedElementIds, selectElement, setSelectedElements, setModifierSelectedElements, tool, connectSourceId, setConnectSource, pendingRelType, snapToGrid: snapEnabled } = useUIStore();
+  const { selectedElementId, selectedElementIds, selectElement, setSelectedElements, setModifierSelectedElements, tool, connectSourceId, setConnectSource, pendingRelType, defaultRelationshipRoutingMode, snapToGrid: snapEnabled } = useUIStore();
   const { zoom } = useContext(CanvasContext);
   const suppressNextClickRef = useRef(false);
   const dragMovedRef = useRef(false);
@@ -323,8 +323,11 @@ export function UMLBox({ element }: UMLBoxProps) {
       if (!connectSourceId)                    { setConnectSource(element.id); }
       else if (connectSourceId !== element.id) {
         const relId = addRelationship(connectSourceId, element.id, pendingRelType);
-        if (relId && tool === 'dashed_connect') {
-          updateRelationship(relId, { isDashed: true });
+        if (relId) {
+          updateRelationship(relId, {
+            routingMode: defaultRelationshipRoutingMode,
+            ...(tool === 'dashed_connect' ? { isDashed: true } : {}),
+          });
         }
         setConnectSource(null);
       }

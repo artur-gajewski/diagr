@@ -8,6 +8,7 @@ import {
   bestAnchorPair,
   getAnchorPoint,
   buildBezierPath,
+  buildRelationshipRoutes,
 } from '@/utils/geometry';
 
 // ────────── PNG ──────────
@@ -394,22 +395,8 @@ function computeDiagramBounds(elements: UMLElement[], relationships: Relationshi
     includeRect(r.x, r.y, r.width, r.height);
   });
 
-  const elMap = new Map(elements.map((e) => [e.id, e]));
-  relationships.forEach((r) => {
-    const src = elMap.get(r.sourceId);
-    const tgt = elMap.get(r.targetId);
-    if (!src || !tgt) return;
-    const srcRect = getBoxRect(src);
-    const tgtRect = getBoxRect(tgt);
-    const { srcSide, tgtSide } = bestAnchorPair(srcRect, tgtRect);
-    const start = getAnchorPoint(srcRect, srcSide);
-    const end = getAnchorPoint(tgtRect, tgtSide);
-    const cp1 = outwardControl(start, srcSide);
-    const cp2 = outwardControl(end, tgtSide);
-    includePoint(start.x, start.y);
-    includePoint(end.x, end.y);
-    includePoint(cp1.x, cp1.y);
-    includePoint(cp2.x, cp2.y);
+  buildRelationshipRoutes(elements, relationships).forEach((route) => {
+    route.boundsPoints.forEach((point) => includePoint(point.x, point.y));
   });
 
   const contentW = Math.max(1, maxX - minX);

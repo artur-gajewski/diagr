@@ -1,13 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import type { Relationship, UMLElement } from '@/types';
-import {
-  getBoxRect,
-  bestAnchorPair,
-  getAnchorPoint,
-  buildBezierPath,
-} from '@/utils/geometry';
-import type { AnchorSide, Point } from '@/types';
+import type { Relationship } from '@/types';
+import type { RelationshipRoute } from '@/utils/geometry';
 import { useUIStore } from '@/store/uiStore';
 
 
@@ -22,45 +16,14 @@ const REL_COLORS: Record<string, string> = {
 
 interface RelationshipArrowProps {
   relationship: Relationship;
-  elements: UMLElement[];
-  routeIndex?: number;
-  routeCount?: number;
+  route: RelationshipRoute | null;
 }
 
-export function RelationshipArrow({ relationship, elements, routeIndex = 0, routeCount = 1 }: RelationshipArrowProps) {
+export function RelationshipArrow({ relationship, route }: RelationshipArrowProps) {
   const [hovered, setHovered] = useState(false);
   const { selectedRelationshipId, selectRelationship, tool } = useUIStore();
 
-  const src = elements.find((e) => e.id === relationship.sourceId);
-  const tgt = elements.find((e) => e.id === relationship.targetId);
-  if (!src || !tgt) return null;
-
-  const srcRect = getBoxRect(src);
-  const tgtRect = getBoxRect(tgt);
-  const { srcSide, tgtSide } = bestAnchorPair(srcRect, tgtRect);
-  const rawStart  = getAnchorPoint(srcRect, srcSide);
-  const rawEnd    = getAnchorPoint(tgtRect, tgtSide);
-
-  const srcCenter = { x: srcRect.x + srcRect.width / 2, y: srcRect.y + srcRect.height / 2 };
-  const tgtCenter = { x: tgtRect.x + tgtRect.width / 2, y: tgtRect.y + tgtRect.height / 2 };
-  const canonicalForward = relationship.sourceId.localeCompare(relationship.targetId) <= 0;
-  const pairFrom = canonicalForward ? srcCenter : tgtCenter;
-  const pairTo = canonicalForward ? tgtCenter : srcCenter;
-  const pairDx = pairTo.x - pairFrom.x;
-  const pairDy = pairTo.y - pairFrom.y;
-  const pairLen = Math.hypot(pairDx, pairDy) || 1;
-  const nx = -pairDy / pairLen;
-  const ny = pairDx / pairLen;
-
-  const laneSpacing = 20;
-  const laneOffset = routeCount > 1 ? (routeIndex - (routeCount - 1) / 2) * laneSpacing : 0;
-  const laneStart = { x: rawStart.x + nx * laneOffset, y: rawStart.y + ny * laneOffset };
-  const laneEnd = { x: rawEnd.x + nx * laneOffset, y: rawEnd.y + ny * laneOffset };
-
-  const markerPad = 6;
-  const start = offsetOutsideBox(laneStart, srcSide, relationship.type === 'composition' || relationship.type === 'aggregation' ? markerPad : 2);
-  const end = offsetOutsideBox(laneEnd, tgtSide, markerPad);
-  const d = buildBezierPath(start, end, srcSide, tgtSide);
+  if (!route) return null;
 
   const isSelected  = selectedRelationshipId === relationship.id;
   const active      = hovered || isSelected;
@@ -94,7 +57,7 @@ export function RelationshipArrow({ relationship, elements, routeIndex = 0, rout
     >
       {/* ── Wide invisible hit target ── */}
       <path
-        d={d}
+        d={route.hitPathD}
         fill="none"
         stroke="transparent"
         strokeWidth={18}
@@ -104,7 +67,7 @@ export function RelationshipArrow({ relationship, elements, routeIndex = 0, rout
 
       {/* ── Visual arrow line ── */}
       <motion.path
-        d={d}
+        d={route.drawPathD}
         fill="none"
         stroke={color}
         strokeWidth={active ? activeWidth : baseWidth}
@@ -121,7 +84,7 @@ export function RelationshipArrow({ relationship, elements, routeIndex = 0, rout
       {/* ── Selected highlight glow ── */}
       {isSelected && (
         <path
-          d={d}
+          d={route.drawPathD}
           fill="none"
           stroke={color}
           strokeWidth={6}
@@ -132,13 +95,13 @@ export function RelationshipArrow({ relationship, elements, routeIndex = 0, rout
 
       {/* ── Multiplicity labels (always shown when present) ── */}
       {relationship.sourceMultiplicity && (
-        <text x={start.x + 10} y={start.y - 6} fontSize={10} fill={color} textAnchor="middle"
+        <text x={route.sourceMultiplicityPoint.x} y={route.sourceMultiplicityPoint.y} fontSize={10} fill={color} textAnchor="middle"
           fontFamily="Inter, system-ui, sans-serif" style={{ pointerEvents: 'none' }}>
           {relationship.sourceMultiplicity}
         </text>
       )}
       {relationship.targetMultiplicity && (
-        <text x={end.x - 10} y={end.y - 6} fontSize={10} fill={color} textAnchor="middle"
+        <text x={route.targetMultiplicityPoint.x} y={route.targetMultiplicityPoint.y} fontSize={10} fill={color} textAnchor="middle"
           fontFamily="Inter, system-ui, sans-serif" style={{ pointerEvents: 'none' }}>
           {relationship.targetMultiplicity}
         </text>
@@ -148,16 +111,4 @@ export function RelationshipArrow({ relationship, elements, routeIndex = 0, rout
   );
 }
 
-function offsetOutsideBox(point: Point, side: AnchorSide, distance: number): Point {
-  switch (side) {
-    case 'top':
-      return { x: point.x, y: point.y - distance };
-    case 'bottom':
-      return { x: point.x, y: point.y + distance };
-    case 'left':
-      return { x: point.x - distance, y: point.y };
-    case 'right':
-      return { x: point.x + distance, y: point.y };
-  }
-}
 

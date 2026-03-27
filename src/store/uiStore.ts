@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { RelationshipType, UMLElement, Relationship } from '@/types';
+import type { RelationshipType, UMLElement, Relationship, RelationshipRoutingMode } from '@/types';
 import { calculateFitToContent } from '@/utils/geometry';
 
 export type Tool = 'select' | 'connect' | 'dashed_connect' | 'pan';
@@ -15,6 +15,7 @@ interface UIStore {
 
   // Connect mode
   pendingRelType: RelationshipType;
+  defaultRelationshipRoutingMode: RelationshipRoutingMode;
   connectSourceId: string | null;
   isDashedMode: boolean;
 
@@ -34,6 +35,8 @@ interface UIStore {
   selectRelationship: (id: string | null) => void;
   setTool: (tool: Tool) => void;
   setPendingRelType: (type: RelationshipType) => void;
+  setDefaultRelationshipRoutingMode: (mode: RelationshipRoutingMode) => void;
+  toggleDefaultRelationshipRoutingMode: () => void;
   setConnectSource: (id: string | null) => void;
   setIsDashedMode: (isDashed: boolean) => void;
   toggleTheme: () => void;
@@ -51,6 +54,8 @@ export const useUIStore = create<UIStore>((set) => ({
   selectedRelationshipId: null,
   tool: 'select',
   pendingRelType: 'association',
+  defaultRelationshipRoutingMode:
+    (localStorage.getItem('diagr-default-relationship-routing') as RelationshipRoutingMode) ?? 'curved',
   connectSourceId: null,
   isDashedMode: false,
   theme: (localStorage.getItem('diagr-theme') as 'light' | 'dark') ?? 'light',
@@ -87,6 +92,19 @@ export const useUIStore = create<UIStore>((set) => ({
     set({ tool, connectSourceId: null }),
 
   setPendingRelType: (type) => set({ pendingRelType: type }),
+
+  setDefaultRelationshipRoutingMode: (mode) =>
+    set(() => {
+      localStorage.setItem('diagr-default-relationship-routing', mode);
+      return { defaultRelationshipRoutingMode: mode };
+    }),
+
+  toggleDefaultRelationshipRoutingMode: () =>
+    set((s) => {
+      const next = s.defaultRelationshipRoutingMode === 'curved' ? 'orthogonal' : 'curved';
+      localStorage.setItem('diagr-default-relationship-routing', next);
+      return { defaultRelationshipRoutingMode: next };
+    }),
 
   setConnectSource: (id) => set({ connectSourceId: id }),
 
