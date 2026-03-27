@@ -70,6 +70,10 @@ export interface Relationship {
   targetMultiplicity?: string;
   isDashed?: boolean;
   routingMode?: RelationshipRoutingMode;
+  /** Manually overridden anchor side on the source element (set by drag-to-reroute). */
+  sourceAnchorOverride?: AnchorSide;
+  /** Manually overridden anchor side on the target element (set by drag-to-reroute). */
+  targetAnchorOverride?: AnchorSide;
 }
 
 // ────────── Diagram snapshot (for import/export) ──────────

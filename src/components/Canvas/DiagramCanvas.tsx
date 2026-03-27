@@ -10,8 +10,11 @@ import { RelationshipArrow } from './RelationshipArrow';
 import { SvgDefs } from './SvgDefs';
 
 // ────────── Canvas context ──────────
-interface CanvasContextValue { zoom: number }
-export const CanvasContext = createContext<CanvasContextValue>({ zoom: 1 });
+interface CanvasContextValue {
+  zoom: number;
+  toCanvasPoint: (clientX: number, clientY: number) => { x: number; y: number } | null;
+}
+export const CanvasContext = createContext<CanvasContextValue>({ zoom: 1, toCanvasPoint: () => null });
 
 const CANVAS_SIZE = 5000;
 const MIN_ZOOM = 0.2;
@@ -212,7 +215,7 @@ export function DiagramCanvas({ canvasRef }: { canvasRef: React.RefObject<HTMLDi
     document.documentElement.classList.contains('dark');
 
   return (
-    <CanvasContext.Provider value={{ zoom }}>
+    <CanvasContext.Provider value={{ zoom, toCanvasPoint }}>
       <div
         ref={viewportRef}
         className="absolute inset-0 overflow-hidden select-none"

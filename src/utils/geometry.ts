@@ -207,7 +207,9 @@ function computeRelationshipRoute(
 
   const srcRect = getBoxRect(src);
   const tgtRect = getBoxRect(tgt);
-  const { srcSide, tgtSide } = bestAnchorPair(srcRect, tgtRect);
+  const pair = bestAnchorPair(srcRect, tgtRect);
+  const srcSide: AnchorSide = relationship.sourceAnchorOverride ?? pair.srcSide;
+  const tgtSide: AnchorSide = relationship.targetAnchorOverride ?? pair.tgtSide;
   const rawStart = getAnchorPoint(srcRect, srcSide);
   const rawEnd = getAnchorPoint(tgtRect, tgtSide);
 
@@ -561,3 +563,23 @@ export function calculateFitToContent(
 
   return { zoom: nextZoom, panX: nextPanX, panY: nextPanY };
 }
+
+// ────────── Anchor helpers ──────────
+/**
+ * Given a point in canvas space and a rect, returns the side of the rect that the
+ * point "approaches from" — i.e., the side a connection exiting the rect toward that
+ * point would use.  Normalises dx/dy by the half-dimensions so non-square boxes work.
+ */
+export function getNearestSide(point: Point, rect: Rect): AnchorSide {
+  const cx = rect.x + rect.width / 2;
+  const cy = rect.y + rect.height / 2;
+  const dx = point.x - cx;
+  const dy = point.y - cy;
+  const nx = rect.width  > 0 ? dx / (rect.width  / 2) : dx;
+  const ny = rect.height > 0 ? dy / (rect.height / 2) : dy;
+  if (Math.abs(nx) >= Math.abs(ny)) return nx >= 0 ? 'right' : 'left';
+  return ny >= 0 ? 'bottom' : 'top';
+}
+
+// ────────── Marquee selection helpers ──────────
+
