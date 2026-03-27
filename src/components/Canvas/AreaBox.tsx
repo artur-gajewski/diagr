@@ -93,9 +93,11 @@ export function AreaBox({ element }: AreaBoxProps) {
     const startH = boxH;
     const MIN = 80;
     const onMove = (ev: MouseEvent) => {
+      const rawW = Math.max(MIN, startW + (ev.clientX - startX) / zoom);
+      const rawH = Math.max(MIN, startH + (ev.clientY - startY) / zoom);
       updateElement(element.id, {
-        boxWidth: Math.max(MIN, startW + (ev.clientX - startX) / zoom),
-        boxHeight: Math.max(MIN, startH + (ev.clientY - startY) / zoom),
+        boxWidth:  snapEnabled ? Math.max(MIN, snapFn(rawW)) : rawW,
+        boxHeight: snapEnabled ? Math.max(MIN, snapFn(rawH)) : rawH,
       });
     };
     const onUp = () => {

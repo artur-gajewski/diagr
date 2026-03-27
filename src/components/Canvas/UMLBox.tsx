@@ -31,15 +31,18 @@ function NoteBox({
   onClick: (e: React.MouseEvent) => void;
 }) {
   const { updateElement, deleteElement } = useDiagramStore();
-  const { selectElement, tool } = useUIStore();
+  const { selectElement, tool, snapToGrid: snapEnabled } = useUIStore();
+  const { zoom } = useContext(CanvasContext);
   const noteHeight    = element.noteHeight ?? NOTE_MIN_HEIGHT;
   const textAreaH     = noteHeight - NOTE_HEADER_HEIGHT - 12;
 
   const handleResize = (e: React.MouseEvent) => {
     e.stopPropagation();
     const startY = e.clientY, startH = noteHeight;
-    const onMove = (ev: MouseEvent) =>
-      updateElement(element.id, { noteHeight: Math.max(NOTE_MIN_HEIGHT, startH + ev.clientY - startY) });
+    const onMove = (ev: MouseEvent) => {
+      const raw = Math.max(NOTE_MIN_HEIGHT, startH + (ev.clientY - startY) / zoom);
+      updateElement(element.id, { noteHeight: snapEnabled ? snapToGrid(raw) : raw });
+    };
     const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
@@ -315,9 +318,12 @@ export function UMLBox({ element }: UMLBoxProps) {
     const startW = getBoxWidth(element), startH = getBoxHeight(element);
     const MIN_SIZE = 60;
     const onMove = (ev: MouseEvent) => {
-      const newW = Math.max(MIN_SIZE, startW + (ev.clientX - startX) / zoom);
-      const newH = Math.max(MIN_SIZE, startH + (ev.clientY - startY) / zoom);
-      updateElement(element.id, { boxWidth: newW, boxHeight: newH });
+      const rawW = Math.max(MIN_SIZE, startW + (ev.clientX - startX) / zoom);
+      const rawH = Math.max(MIN_SIZE, startH + (ev.clientY - startY) / zoom);
+      updateElement(element.id, {
+        boxWidth:  snapEnabled ? Math.max(MIN_SIZE, snapToGrid(rawW)) : rawW,
+        boxHeight: snapEnabled ? Math.max(MIN_SIZE, snapToGrid(rawH)) : rawH,
+      });
     };
     const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
     document.addEventListener('mousemove', onMove);
