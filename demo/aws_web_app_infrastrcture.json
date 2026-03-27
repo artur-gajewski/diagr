@@ -1,0 +1,141 @@
+{
+  "version": "1.0.0",
+  "elements": [
+
+    { "id": "area-client",  "type": "area", "name": "Client Layer",         "x": 100,  "y": 100, "properties": [], "methods": [], "boxWidth": 530,  "boxHeight": 220, "color": "#1e3a5f" },
+    { "id": "area-cdn",     "type": "area", "name": "CDN & Edge",            "x": 670,  "y": 100, "properties": [], "methods": [], "boxWidth": 530,  "boxHeight": 220, "color": "#4c1d95" },
+    { "id": "area-auth",    "type": "area", "name": "Authentication",        "x": 1240, "y": 100, "properties": [], "methods": [], "boxWidth": 530,  "boxHeight": 220, "color": "#312e81" },
+    { "id": "area-api",     "type": "area", "name": "API Layer",             "x": 100,  "y": 380, "properties": [], "methods": [], "boxWidth": 1670, "boxHeight": 410, "color": "#0e7490" },
+    { "id": "area-compute", "type": "area", "name": "Compute",               "x": 100,  "y": 850, "properties": [], "methods": [], "boxWidth": 800,  "boxHeight": 400, "color": "#064e3b" },
+    { "id": "area-data",    "type": "area", "name": "Data Layer",            "x": 950,  "y": 850, "properties": [], "methods": [], "boxWidth": 720,  "boxHeight": 400, "color": "#0f766e" },
+    { "id": "area-storage", "type": "area", "name": "Storage & Messaging",   "x": 100,  "y": 1320,"properties": [], "methods": [], "boxWidth": 1670, "boxHeight": 280, "color": "#78350f" },
+
+    {
+      "id": "text-title", "type": "text", "name": "Title",
+      "x": 100, "y": 30,
+      "properties": [], "methods": [],
+      "content": "AWS Web App – Production Infrastructure",
+      "fontSize": 26, "textAlign": "left",
+      "boxWidth": 640, "boxHeight": 36
+    },
+
+    {
+      "id": "img-logo", "type": "image", "name": "Architecture Diagram",
+      "x": 1850, "y": 100,
+      "properties": [], "methods": [],
+      "boxWidth": 200, "boxHeight": 150
+    },
+
+    { "id": "svc-react-spa", "type": "service", "name": "React SPA",    "x": 150, "y": 185, "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72 },
+    { "id": "svc-mobile",    "type": "service", "name": "Mobile App",   "x": 400, "y": 185, "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72 },
+
+    { "id": "svc-cloudfront", "type": "service", "name": "CloudFront", "x": 720,  "y": 185, "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72 },
+    { "id": "obj-waf",        "type": "object",  "name": "WAF",        "x": 970,  "y": 185, "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72 },
+
+    { "id": "svc-cognito", "type": "service", "name": "Cognito",       "x": 1290, "y": 185, "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72 },
+    {
+      "id": "note-auth", "type": "note", "name": "Auth Note",
+      "x": 1510, "y": 135,
+      "properties": [], "methods": [],
+      "content": "JWT Tokens\nOAuth 2.0\nUser Pools\nMFA Support",
+      "noteHeight": 140
+    },
+
+    { "id": "svc-api-gw",        "type": "service",   "name": "API Gateway",    "x": 150,  "y": 520, "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72  },
+    { "id": "cond-route",        "type": "condition", "name": "Authenticated?",  "x": 420,  "y": 516, "properties": [], "methods": [], "boxWidth": 190, "boxHeight": 110 },
+    { "id": "yes-ok",            "type": "yes",       "name": "Yes",             "x": 680,  "y": 496, "properties": [], "methods": [], "boxWidth": 72,  "boxHeight": 52  },
+    { "id": "no-denied",         "type": "no",        "name": "No",              "x": 680,  "y": 590, "properties": [], "methods": [], "boxWidth": 72,  "boxHeight": 52  },
+    { "id": "svc-auth-lambda",   "type": "service",   "name": "Auth λ",          "x": 820,  "y": 460, "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72  },
+    { "id": "svc-product-lambda","type": "service",   "name": "Product λ",       "x": 1080, "y": 460, "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72  },
+    { "id": "svc-order-lambda",  "type": "service",   "name": "Order λ",         "x": 820,  "y": 610, "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72  },
+    { "id": "svc-notif-lambda",  "type": "service",   "name": "Notification λ",  "x": 1080, "y": 610, "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72  },
+    { "id": "obj-step-fn",       "type": "object",    "name": "Step Functions",  "x": 1360, "y": 530, "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72  },
+
+    { "id": "srv-ec2-1",  "type": "server",    "name": "EC2 Web #1",         "x": 150, "y": 960,  "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72  },
+    { "id": "srv-ec2-2",  "type": "server",    "name": "EC2 Web #2",         "x": 400, "y": 960,  "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72  },
+    { "id": "srv-ecs",    "type": "server",    "name": "ECS Fargate",         "x": 150, "y": 1100, "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72  },
+    { "id": "obj-alb",    "type": "object",    "name": "App Load Balancer",   "x": 400, "y": 1100, "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72  },
+    { "id": "cond-health","type": "condition", "name": "Healthy?",            "x": 650, "y": 948,  "properties": [], "methods": [], "boxWidth": 190, "boxHeight": 110 },
+    { "id": "yes-healthy","type": "yes",       "name": "Yes",                 "x": 700, "y": 1090, "properties": [], "methods": [], "boxWidth": 72,  "boxHeight": 52  },
+    { "id": "no-unhealthy","type": "no",       "name": "No",                  "x": 700, "y": 1165, "properties": [], "methods": [], "boxWidth": 72,  "boxHeight": 52  },
+
+    { "id": "db-rds",        "type": "database", "name": "RDS Aurora (Primary)", "x": 1000, "y": 960,  "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72 },
+    { "id": "db-dynamo",     "type": "database", "name": "DynamoDB",             "x": 1260, "y": 960,  "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72 },
+    { "id": "db-elasticache","type": "database", "name": "ElastiCache",          "x": 1000, "y": 1100, "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72 },
+    { "id": "db-replica",    "type": "database", "name": "RDS Read Replica",     "x": 1260, "y": 1100, "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72 },
+
+    { "id": "obj-s3-static",  "type": "object", "name": "S3 Static Assets", "x": 150, "y": 1410, "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72 },
+    { "id": "obj-s3-backups", "type": "object", "name": "S3 Backups",        "x": 410, "y": 1410, "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72 },
+    { "id": "obj-sqs",        "type": "object", "name": "SQS Queue",         "x": 670, "y": 1410, "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72 },
+    { "id": "obj-sns",        "type": "object", "name": "SNS Topic",         "x": 930, "y": 1410, "properties": [], "methods": [], "boxWidth": 200, "boxHeight": 72 },
+    {
+      "id": "txt-eventbridge", "type": "text", "name": "EventBridge",
+      "x": 1195, "y": 1425,
+      "properties": [], "methods": [],
+      "content": "EventBridge", "fontSize": 20, "textAlign": "center",
+      "boxWidth": 150, "boxHeight": 28
+    },
+    {
+      "id": "note-retention", "type": "note", "name": "Retention Note",
+      "x": 1430, "y": 1360,
+      "properties": [], "methods": [],
+      "content": "Retention Policy:\nS3: 90 days\nSQS: 14 day TTL\nSNS: Fan-out pattern",
+      "noteHeight": 140
+    }
+
+  ],
+  "relationships": [
+
+    { "id": "rel-01", "type": "association", "sourceId": "svc-react-spa",     "targetId": "svc-cloudfront",      "label": "HTTPS"             },
+    { "id": "rel-02", "type": "association", "sourceId": "svc-mobile",        "targetId": "svc-cloudfront",      "label": "HTTPS"             },
+    { "id": "rel-03", "type": "dependency",  "sourceId": "obj-waf",           "targetId": "svc-cloudfront"                                    },
+    { "id": "rel-04", "type": "dependency",  "sourceId": "svc-react-spa",     "targetId": "svc-cognito"                                       },
+    { "id": "rel-05", "type": "dependency",  "sourceId": "svc-mobile",        "targetId": "svc-cognito"                                       },
+
+    { "id": "rel-06", "type": "association", "sourceId": "svc-cloudfront",    "targetId": "svc-api-gw",          "label": "API calls"         },
+    { "id": "rel-07", "type": "dependency",  "sourceId": "svc-cloudfront",    "targetId": "obj-s3-static",       "label": "Static assets"     },
+    { "id": "rel-08", "type": "dependency",  "sourceId": "svc-cognito",       "targetId": "svc-api-gw",          "label": "Token validation"  },
+
+    { "id": "rel-09", "type": "association", "sourceId": "svc-api-gw",        "targetId": "cond-route"                                        },
+    { "id": "rel-10", "type": "association", "sourceId": "cond-route",        "targetId": "yes-ok"                                            },
+    { "id": "rel-11", "type": "association", "sourceId": "cond-route",        "targetId": "no-denied"                                         },
+    { "id": "rel-12", "type": "association", "sourceId": "yes-ok",            "targetId": "svc-auth-lambda"                                   },
+
+    { "id": "rel-13", "type": "dependency",  "sourceId": "svc-auth-lambda",   "targetId": "svc-cognito"                                       },
+    { "id": "rel-14", "type": "association", "sourceId": "svc-auth-lambda",   "targetId": "svc-product-lambda"                               },
+    { "id": "rel-15", "type": "association", "sourceId": "svc-auth-lambda",   "targetId": "svc-order-lambda"                                 },
+
+    { "id": "rel-16", "type": "aggregation", "sourceId": "obj-step-fn",       "targetId": "svc-order-lambda"                                 },
+    { "id": "rel-17", "type": "aggregation", "sourceId": "obj-step-fn",       "targetId": "svc-notif-lambda"                                 },
+    { "id": "rel-18", "type": "association", "sourceId": "svc-product-lambda","targetId": "obj-step-fn"                                       },
+
+    { "id": "rel-19", "type": "association", "sourceId": "svc-product-lambda","targetId": "obj-alb"                                           },
+    { "id": "rel-20", "type": "association", "sourceId": "obj-alb",           "targetId": "srv-ec2-1"                                         },
+    { "id": "rel-21", "type": "association", "sourceId": "obj-alb",           "targetId": "srv-ec2-2"                                         },
+    { "id": "rel-22", "type": "inheritance", "sourceId": "srv-ecs",           "targetId": "srv-ec2-1"                                         },
+
+    { "id": "rel-23", "type": "association", "sourceId": "srv-ec2-1",         "targetId": "cond-health"                                       },
+    { "id": "rel-24", "type": "association", "sourceId": "cond-health",       "targetId": "yes-healthy"                                       },
+    { "id": "rel-25", "type": "association", "sourceId": "cond-health",       "targetId": "no-unhealthy"                                      },
+
+    { "id": "rel-26", "type": "association", "sourceId": "srv-ec2-1",         "targetId": "db-rds"                                            },
+    { "id": "rel-27", "type": "association", "sourceId": "srv-ec2-2",         "targetId": "db-rds"                                            },
+    { "id": "rel-28", "type": "association", "sourceId": "srv-ecs",           "targetId": "db-dynamo"                                         },
+    { "id": "rel-29", "type": "dependency",  "sourceId": "srv-ecs",           "targetId": "db-elasticache"                                    },
+
+    { "id": "rel-30", "type": "composition", "sourceId": "db-rds",            "targetId": "db-replica",          "label": "Replication"       },
+
+    { "id": "rel-31", "type": "dependency",  "sourceId": "svc-product-lambda","targetId": "db-dynamo"                                         },
+    { "id": "rel-32", "type": "dependency",  "sourceId": "svc-product-lambda","targetId": "db-elasticache"                                    },
+    { "id": "rel-33", "type": "dependency",  "sourceId": "svc-order-lambda",  "targetId": "srv-ecs"                                           },
+
+    { "id": "rel-34", "type": "association", "sourceId": "svc-order-lambda",  "targetId": "obj-sqs"                                           },
+    { "id": "rel-35", "type": "dependency",  "sourceId": "obj-sqs",           "targetId": "svc-notif-lambda"                                  },
+    { "id": "rel-36", "type": "realization", "sourceId": "svc-notif-lambda",  "targetId": "obj-sns"                                           },
+
+    { "id": "rel-37", "type": "dependency",  "sourceId": "srv-ec2-1",         "targetId": "obj-s3-backups"                                    },
+    { "id": "rel-38", "type": "dependency",  "sourceId": "db-rds",            "targetId": "obj-s3-backups",      "label": "Snapshots"         }
+
+  ]
+}
+
