@@ -258,7 +258,16 @@ export function UMLBox({ element }: UMLBoxProps) {
 
   // ── Drag ──
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (tool === 'connect' || tool === 'dashed_connect' || e.button !== 0) return;
+    if (e.button !== 0) return;
+    if (tool === 'pan') {
+      // Suppress the click that fires on mouseup so releasing SPACE doesn't select this element.
+      suppressNextClickRef.current = true;
+      return; // Let event bubble to canvas to handle panning
+    }
+    if (tool === 'connect' || tool === 'dashed_connect') return;
+    // Clear any stale suppress flag left over from a pan press where the mouse moved
+    // (mouse movement prevents a click from firing, so the flag never got cleared in handleClick).
+    suppressNextClickRef.current = false;
     e.stopPropagation();
 
     // ── Ctrl/Cmd+click: add to multi-selection ──

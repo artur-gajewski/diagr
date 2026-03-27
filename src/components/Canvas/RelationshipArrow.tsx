@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { Relationship } from '@/types';
 import type { RelationshipRoute } from '@/utils/geometry';
@@ -21,6 +21,7 @@ interface RelationshipArrowProps {
 
 export function RelationshipArrow({ relationship, route }: RelationshipArrowProps) {
   const [hovered, setHovered] = useState(false);
+  const suppressNextClickRef = useRef(false);
   const { selectedRelationshipId, selectRelationship, tool } = useUIStore();
 
   if (!route) return null;
@@ -43,8 +44,23 @@ export function RelationshipArrow({ relationship, route }: RelationshipArrowProp
     ? 'url(#mk-diamond-hollow)'
     : undefined;
 
+  const handleLineMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    if (tool === 'pan') {
+      // Suppress the click that fires on mouseup so releasing SPACE doesn't select this relationship.
+      suppressNextClickRef.current = true;
+      return; // Let event bubble to canvas to handle panning
+    }
+    // Clear any stale suppress flag from a previous pan press where the mouse moved.
+    suppressNextClickRef.current = false;
+  };
+
   const handleLineClick = (e: React.MouseEvent) => {
     if (tool !== 'select') return;
+    if (suppressNextClickRef.current) {
+      suppressNextClickRef.current = false;
+      return;
+    }
     e.stopPropagation();
     selectRelationship(isSelected ? null : relationship.id);
   };
@@ -62,6 +78,7 @@ export function RelationshipArrow({ relationship, route }: RelationshipArrowProp
         stroke="transparent"
         strokeWidth={18}
         style={{ cursor: tool === 'select' ? 'pointer' : 'default', pointerEvents: 'stroke' }}
+        onMouseDown={handleLineMouseDown}
         onClick={handleLineClick}
       />
 

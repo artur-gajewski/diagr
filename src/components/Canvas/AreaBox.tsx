@@ -45,7 +45,13 @@ export function AreaBox({ element }: AreaBoxProps) {
 
   // ── Drag ──
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (tool === 'connect' || tool === 'dashed_connect' || e.button !== 0) return;
+    if (e.button !== 0) return;
+    if (tool === 'pan') {
+      suppressNextClickRef.current = true;
+      return;
+    }
+    if (tool === 'connect' || tool === 'dashed_connect') return;
+    suppressNextClickRef.current = false;
     e.stopPropagation();
 
     // ── Ctrl/Cmd+click: add to multi-selection ──

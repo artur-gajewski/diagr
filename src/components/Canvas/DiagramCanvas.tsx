@@ -57,6 +57,7 @@ export function DiagramCanvas({ canvasRef }: { canvasRef: React.RefObject<HTMLDi
       e.preventDefault();
       setTool(toolBeforeSpace.current);
       toolBeforeSpace.current = null;
+      // Reset panning immediately when exiting pan mode via spacebar
       isPanning.current = false;
     };
     window.addEventListener('keydown', onKeyDown);
@@ -109,15 +110,17 @@ export function DiagramCanvas({ canvasRef }: { canvasRef: React.RefObject<HTMLDi
     []
   );
 
-  // ── Pan via middle-mouse or pan tool ──
+  // ── Pan via middle-mouse, right-mouse, or pan tool ──
   const handleViewportMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button === 1 || tool === 'pan') {
+    // Pan mode: only allow panning, ignore all other interactions
+    if (e.button === 1 || e.button === 2 || tool === 'pan') {
       e.preventDefault();
       isPanning.current = true;
       panStart.current  = { x: e.clientX, y: e.clientY };
       panOrigin.current = { x: useUIStore.getState().panX, y: useUIStore.getState().panY };
       return;
     }
+    
     // Start marquee anywhere in the viewport in select mode;
     // element/relationship interactions already stop propagation.
     if (e.button === 0 && tool === 'select') {
@@ -218,6 +221,7 @@ export function DiagramCanvas({ canvasRef }: { canvasRef: React.RefObject<HTMLDi
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onContextMenu={(e) => e.preventDefault()}
       >
         {/* Transformed canvas */}
         <div
