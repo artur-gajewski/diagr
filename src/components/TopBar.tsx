@@ -527,7 +527,19 @@ export function TopBar({ canvasRef }: TopBarProps) {
                 <div className="space-y-2 text-sm">
                   <div className="flex items-start gap-3">
                     <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-nowrap">
-                      Delete
+                      Ctrl+Click
+                    </kbd>
+                    <span className="text-slate-600 dark:text-slate-400">Add or remove an element from the current selection</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-nowrap">
+                      Ctrl+Drag
+                    </kbd>
+                    <span className="text-slate-600 dark:text-slate-400">Add element to selection and move the whole group</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-nowrap">
+                      Delete / D
                     </kbd>
                     <span className="text-slate-600 dark:text-slate-400">Delete selected element or relationship</span>
                   </div>
@@ -554,7 +566,7 @@ export function TopBar({ canvasRef }: TopBarProps) {
                 <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400 list-disc list-inside">
                   <li>Click elements to select them and edit properties in the right panel</li>
                   <li>Drag elements to move them around the canvas</li>
-                  <li>Use the left toolbar to add new UML elements</li>
+                  <li>Use the left toolbar to add new elements</li>
                   <li>Toggle snap-to-grid in the top bar for precise alignment</li>
                   <li>Export diagrams as PNG, SVG, PDF, or JSON with custom filenames</li>
                   <li>Import previously saved JSON diagrams</li>
