@@ -1,20 +1,47 @@
 # Diagr — Free Online Diagram Designer
 
-A modern, lightweight web-based diagram editor built with React, TypeScript, and Tailwind CSS. Create, edit, and export professional diagrams with an intuitive interface and dark mode support.
+A modern web-based diagram editor built with React, TypeScript, and Tailwind CSS. Create, edit, and export professional diagrams with an intuitive interface and dark mode support.
 
-<img width="1486" height="816" alt="Screenshot 2026-03-26 at 10 21 47" src="https://github.com/user-attachments/assets/5f294fcb-04f1-4818-8f69-7d6b6026ffc8" />
+This project is an ongoing investigation and trial of 100% vibe coding to see how well does AI generated code work from functional perspective. Initially this project started off with 25 prompts to get to the MVP state. Since the project is ongoing and new features are added constantly, you need to open the first commit to see how it started:
+
+https://github.com/artur-gajewski/diagr/commit/ceab6936c1fb4963603add0a6d76be7ee4611bcb 
+
+Initial prompt given was:
+
+- Create a diagram web app similar to Lucidchart with the following features:
+  - React-based UI
+  - Addable elements (Server, Database, Service, Object)
+  - Property editor
+  - Ability to delete elements
+  - Grid snapping
+  - Zoom controls
+  - Keyboard shortcuts
+  - Help dialog
+  - Clean layout, animations, and styling using Tailwind + shadcn/ui + Framer Motion
+  - Drag-and-drop element positioning
+  - Relationship drawing
+  - Canvas-based (SVG) rendering instead of card lists
+  - Export to PNG/SVG/PDF
+  - Import/Export of JSON models
+  - Light/Dark mode
+  - Typescript
+  - CDK infrastructure
+ 
+Since the initial commit, each new commit represent new prompt to add something new to the app.    
 
 ## Demo
 
-Fully working demo: https://diagr-online.vercel.app
+Fully working demo at current state of the code: https://diagr-online.vercel.app
+
+<img width="1038" height="817" alt="Screenshot 2026-03-27 at 17 01 04" src="https://github.com/user-attachments/assets/59630bbf-fcfc-416b-91e8-2f19d0902d4b" />
 
 ## Features
 
 ✨ **Core Capabilities**
-- 🎨 **Intuitive Canvas** — Drag and drop UML elements with real-time rendering
+- 🎨 **Intuitive Canvas** — Drag and drop elements with real-time rendering
 - 📦 **Element Types** — Server, Database, Service, Object, Note, and Text elements
 - 🔗 **Relationship Types** — Association, Inheritance, Composition, Aggregation, Dependency, and Realization with curved or orthogonal routing
-- 📝 **UML Members** — Add properties and methods with visibility modifiers (+, -, #, ~)
+- 📝 **Members** — Add properties and methods with visibility modifiers (+, -, #, ~)
 - 🎭 **Dark Mode** — Seamless light/dark theme switching with persistent preferences
 - 📤 **Export Options** — PNG, SVG, PDF, and JSON formats with custom filenames
 - 📥 **Import Diagrams** — Load saved JSON diagram files
@@ -56,7 +83,7 @@ diagr/
 │   │   ├── TopBar.tsx                 # Top navigation bar with export/import/theme
 │   │   ├── Canvas/
 │   │   │   ├── DiagramCanvas.tsx      # Main drawing canvas and drag/drop logic
-│   │   │   ├── UMLBox.tsx             # UML element rendering component
+│   │   │   ├── UMLBox.tsx             # Element rendering component
 │   │   │   ├── RelationshipArrow.tsx  # Bezier curve arrow rendering
 │   │   │   └── SvgDefs.tsx            # SVG marker definitions for arrows
 │   │   └── Panels/
@@ -104,7 +131,7 @@ diagr/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/diagr.git
+   git clone https://github.com/artur-gajewski/diagr.git
    cd diagr
    ```
 
@@ -124,7 +151,7 @@ diagr/
 ### Creating Diagrams
 
 1. **Add Elements**
-   - Use the left toolbar to add UML elements (Server, Database, Service, Object, Note, Text)
+   - Use the left toolbar to add elements (Server, Database, Service, Object, Note, Text)
    - Elements are created at a default position and can be dragged
 
 2. **Edit Element Properties**
@@ -256,7 +283,7 @@ Modern browser with ES2020+ support required.
 
 - ⚠️ Single-page diagrams (no multi-page support yet)
 - ⚠️ Real-time collaboration not yet implemented
-- 🔜 Undo/redo history
+- 🔜 Undo/redo history (only one step undo for now)
 - 🔜 Copy/paste elements
 - 🔜 Diagram templates
 - 🔜 Collaborative editing
@@ -265,15 +292,6 @@ Modern browser with ES2020+ support required.
 
 MIT
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
 ## Author
 
-Built with ❤️ by Artur Gajewski and contributors.
-
----
-
-**Questions or Issues?** Open an issue on GitHub or check the documentation above.
-
+Built by Github Copilot with robotic ❤️
