@@ -7,7 +7,7 @@ export function useKeyboard() {
   const deleteRelationship = useDiagramStore((s) => s.deleteRelationship);
   const elements = useDiagramStore((s) => s.elements);
   const relationships = useDiagramStore((s) => s.relationships);
-  const { selectedElementId, selectedElementIds, selectedRelationshipId, selectElement, selectRelationship, setTool, fitToContent, zoom, zoomAtViewportCenter } =
+  const { selectedElementId, selectedElementIds, selectedRelationshipId, selectElement, selectRelationship, setTool, setSelectedElements, fitToContent, zoom, zoomAtViewportCenter, snapToGrid, setSnapToGrid } =
     useUIStore();
 
   useEffect(() => {
@@ -30,8 +30,16 @@ export function useKeyboard() {
         setTool('connect');
       }
 
-      // Fit to content (A)
+      // Select all elements (A)
       if (key === 'a') {
+        e.preventDefault();
+        const allIds = useDiagramStore.getState().elements.map((el) => el.id);
+        setSelectedElements(allIds);
+        setTool('select');
+      }
+
+      // Fit to content (F)
+      if (key === 'f') {
         e.preventDefault();
         const vp = document.querySelector('main');
         const rect = vp?.getBoundingClientRect();
@@ -75,6 +83,21 @@ export function useKeyboard() {
         }
       }
 
+      // Toggle grid/snap mode (G)
+      if (key === 'g') {
+        e.preventDefault();
+        setSnapToGrid(!snapToGrid);
+      }
+
+      // Add image (I)
+      if (key === 'i') {
+        e.preventDefault();
+        const imageInput = document.querySelector('input[type="file"][accept*="image"]') as HTMLInputElement;
+        if (imageInput) {
+          imageInput.click();
+        }
+      }
+
       if (key === 'escape') {
         selectElement(null);
         selectRelationship(null);
@@ -91,11 +114,14 @@ export function useKeyboard() {
     elements,
     relationships,
     zoom,
+    snapToGrid,
     deleteElement,
     deleteRelationship,
     selectElement,
     selectRelationship,
+    setSelectedElements,
     setTool,
+    setSnapToGrid,
     fitToContent,
     zoomAtViewportCenter,
   ]);

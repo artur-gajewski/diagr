@@ -508,7 +508,7 @@ export function TopBar({ canvasRef }: TopBarProps) {
                   </div>
                   <div className="flex items-start gap-3">
                     <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-nowrap">
-                      A
+                      F
                     </kbd>
                     <span className="text-slate-600 dark:text-slate-400">Fit all elements to viewport</span>
                   </div>
@@ -527,6 +527,12 @@ export function TopBar({ canvasRef }: TopBarProps) {
                 <div className="space-y-2 text-sm">
                   <div className="flex items-start gap-3">
                     <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-nowrap">
+                      A
+                    </kbd>
+                    <span className="text-slate-600 dark:text-slate-400">Select all elements on the canvas</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-nowrap">
                       Ctrl+Click
                     </kbd>
                     <span className="text-slate-600 dark:text-slate-400">Add or remove an element from the current selection</span>
@@ -542,6 +548,18 @@ export function TopBar({ canvasRef }: TopBarProps) {
                       Delete / D
                     </kbd>
                     <span className="text-slate-600 dark:text-slate-400">Delete selected element or relationship</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-nowrap">
+                      G
+                    </kbd>
+                    <span className="text-slate-600 dark:text-slate-400">Toggle grid / snap mode</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-nowrap">
+                      I
+                    </kbd>
+                    <span className="text-slate-600 dark:text-slate-400">Add image</span>
                   </div>
                   <div className="flex items-start gap-3">
                     <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-nowrap">
