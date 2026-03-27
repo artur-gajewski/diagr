@@ -27,6 +27,7 @@ const EXTRA_TYPES: { type: ElementType; label: string; icon: React.ReactNode; co
       { type: 'note',     label: 'Note',     icon: <span className="w-4 h-4 rounded-sm bg-yellow-400  block flex-shrink-0" />, color: 'text-yellow-500'  },
       { type: 'yes',      label: 'Yes',      icon: <span className="w-4 h-4 rounded-sm bg-green-500 flex items-center justify-center text-white"><Check size={12} strokeWidth={3} /></span>, color: 'text-green-500'  },
       { type: 'no',       label: 'No',       icon: <span className="w-4 h-4 rounded-sm bg-rose-500 flex items-center justify-center text-white"><X size={12} strokeWidth={3} /></span>, color: 'text-rose-500'  },
+      { type: 'area',     label: 'Area',     icon: <span className="w-4 h-4 rounded-sm border-2 border-dashed border-blue-900 block flex-shrink-0" />, color: 'text-blue-900'  },
     ];
 
 const TOOLS: { tool: Tool; icon: React.ReactNode; label: string }[] = [

@@ -4,6 +4,7 @@ import { useDiagramStore } from '@/store/diagramStore';
 import { useUIStore } from '@/store/uiStore';
 import { getBoxRect } from '@/utils/geometry';
 import { UMLBox } from './UMLBox';
+import { AreaBox } from './AreaBox';
 import { RelationshipArrow } from './RelationshipArrow';
 import { SvgDefs } from './SvgDefs';
 
@@ -206,7 +207,7 @@ export function DiagramCanvas({ canvasRef }: { canvasRef: React.RefObject<HTMLDi
         setSelectedElements([]);
       } else if (rect) {
         const hitIds = elements
-          .filter((el) => rectsIntersect(rect, getBoxRect(el)))
+          .filter((el) => el.type !== 'area' && rectsIntersect(rect, getBoxRect(el)))
           .map((el) => el.id);
         setSelectedElements(hitIds);
       }
@@ -243,9 +244,19 @@ export function DiagramCanvas({ canvasRef }: { canvasRef: React.RefObject<HTMLDi
           }}
           className="canvas-dots bg-canvas-light dark:bg-canvas-dark"
         >
+          {/* Area layer — always below everything */}
+          <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
+            <AnimatePresence>
+              {elements.filter((el) => el.type === 'area').map((el) => (
+                <AreaBox key={el.id} element={el} />
+              ))}
+            </AnimatePresence>
+          </div>
+
           {/* SVG layer for relationships */}
           <svg style={{ position: 'absolute', inset: 0, width: CANVAS_SIZE, height: CANVAS_SIZE,
-                        zIndex: 10, color: isDark ? '#94a3b8' : '#475569', overflow: 'visible' }}>
+                        zIndex: 10, color: isDark ? '#94a3b8' : '#475569', overflow: 'visible',
+                        pointerEvents: 'none' }}>
             <SvgDefs />
             {relationships.map((r) => (
               <RelationshipArrow
@@ -261,7 +272,7 @@ export function DiagramCanvas({ canvasRef }: { canvasRef: React.RefObject<HTMLDi
           {/* UML boxes */}
           <div style={{ position: 'absolute', inset: 0, zIndex: 20, pointerEvents: 'none' }}>
             <AnimatePresence>
-              {elements.map((el) => (
+              {elements.filter((el) => el.type !== 'area').map((el) => (
                 <UMLBox key={el.id} element={el} />
               ))}
             </AnimatePresence>

@@ -125,7 +125,25 @@ export function generateSVGString(
     .join('\n');
 
   // --- Boxes ---
+  const areaSVGs = elements
+    .filter((el) => el.type === 'area')
+    .map((el) => {
+      const w = el.boxWidth ?? 320;
+      const h = el.boxHeight ?? 220;
+      const color = el.color ?? '#1e3a5f';
+      const r = parseInt(color.slice(1, 3), 16) || 30;
+      const g = parseInt(color.slice(3, 5), 16) || 58;
+      const b = parseInt(color.slice(5, 7), 16) || 95;
+      const fill = `rgba(${r},${g},${b},0.06)`;
+      return [
+        `<rect x="${el.x}" y="${el.y}" width="${w}" height="${h}" rx="12" ry="12" fill="${fill}" stroke="${color}" stroke-width="2" stroke-dasharray="8 5"/>`,
+        svgText(el.x + 12, el.y + 20, el.name.toUpperCase(), color, 11, 'start', false, true),
+      ].join('\n');
+    })
+    .join('\n');
+
   const boxSVGs = elements
+    .filter((el) => el.type !== 'area')
     .map((el) => {
       // ── Plain text element ──
       if (el.type === 'text') {
@@ -213,6 +231,7 @@ export function generateSVGString(
   font-family="${FONT_FAMILY}">
   <rect x="${minX}" y="${minY}" width="${W}" height="${H}" fill="${bg}"/>
   <defs>${defs}</defs>
+  ${areaSVGs}
   ${arrowPaths}
   ${boxSVGs}
 </svg>`;

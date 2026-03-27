@@ -8,7 +8,8 @@ export type ElementType =
   | 'yes'
   | 'no'
   | 'note'
-  | 'text';
+  | 'text'
+  | 'area';
 export type Visibility = '+' | '-' | '#' | '~';
 export type RelationshipType =
   | 'association'
@@ -50,6 +51,8 @@ export interface UMLElement {
   fontSize?: number;
   /** Text alignment — primarily used by the plain 'text' element type */
   textAlign?: 'left' | 'center' | 'right';
+  /** Accent color — used by the 'area' element type */
+  color?: string;
 }
 
 // ────────── Relationship ──────────

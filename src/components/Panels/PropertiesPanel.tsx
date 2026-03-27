@@ -15,6 +15,7 @@ const EL_TYPES: { value: ElementType; label: string }[] = [
   { value: 'yes',      label: 'Yes'      },
   { value: 'no',       label: 'No'       },
   { value: 'text',     label: 'Text'     },
+  { value: 'area',     label: 'Area'     },
 ];
 
 const REL_TYPES: { value: RelationshipType; label: string }[] = [
@@ -107,9 +108,42 @@ function ElementPanel({ element }: { element: UMLElement }) {
     );
   }
 
-  // ── Plain text ──
-  if (element.type === 'text') {
+  // ── Area ──
+  if (element.type === 'area') {
     return (
+      <div className="flex flex-col gap-4">
+        <Field label="Label">
+          <Input
+            value={element.name}
+            onChange={(e) => updateElement(element.id, { name: e.target.value })}
+            placeholder="Area name"
+          />
+        </Field>
+        <Field label="Color">
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              value={element.color ?? '#1e3a5f'}
+              onChange={(e) => updateElement(element.id, { color: e.target.value })}
+              className="w-10 h-9 rounded-lg border border-slate-200 dark:border-slate-600 cursor-pointer bg-transparent p-0.5"
+              title="Pick area color"
+            />
+            <Input
+              value={element.color ?? '#1e3a5f'}
+              onChange={(e) => updateElement(element.id, { color: e.target.value })}
+              placeholder="#1e3a5f"
+              className="font-mono text-xs"
+            />
+          </div>
+        </Field>
+        <ActionBtn onClick={handleDuplicate} label="Duplicate Area" icon={<Copy size={14} />} />
+        <DeleteBtn onClick={() => { deleteElement(element.id); selectElement(null); }} label="Delete Area" />
+      </div>
+    );
+  }
+
+  // ── Plain text ──
+  if (element.type === 'text') {    return (
       <div className="flex flex-col gap-4">
         <Field label="Content">
           <textarea
