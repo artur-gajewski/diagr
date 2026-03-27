@@ -12,31 +12,34 @@ import {
 
 // ────────── PNG ──────────
 export async function exportPNG(
+  canvasEl: HTMLElement,
   elements: UMLElement[],
   relationships: Relationship[],
-  dark: boolean,
   filename: string = 'diagram.png'
 ): Promise<void> {
-  const { dataUrl } = await renderDiagramToPngDataUrl(elements, relationships, dark, 2);
+  const { dataUrl } = await renderDiagramToPngDataUrl(canvasEl, elements, relationships, 2);
   downloadDataUrl(dataUrl, filename.endsWith('.png') ? filename : `${filename}.png`);
 }
 
 // ────────── SVG (html-to-image) ──────────
-export async function exportSVGCapture(canvasEl: HTMLElement, filename: string = 'diagram.svg'): Promise<void> {
-  const dataUrl = await toSvg(canvasEl, {
-    backgroundColor: getComputedStyle(canvasEl).backgroundColor,
-  });
+export async function exportSVGCapture(
+  canvasEl: HTMLElement,
+  elements: UMLElement[],
+  relationships: Relationship[],
+  filename: string = 'diagram.svg'
+): Promise<void> {
+  const dataUrl = await renderDiagramToSvgDataUrl(canvasEl, elements, relationships);
   downloadDataUrl(dataUrl, filename.endsWith('.svg') ? filename : `${filename}.svg`);
 }
 
 // ────────── PDF ──────────
 export async function exportPDF(
+  canvasEl: HTMLElement,
   elements: UMLElement[],
   relationships: Relationship[],
-  dark: boolean,
   filename: string = 'diagram.pdf'
 ): Promise<void> {
-  const { dataUrl, width, height } = await renderDiagramToPngDataUrl(elements, relationships, dark, 2);
+  const { dataUrl, width, height } = await renderDiagramToPngDataUrl(canvasEl, elements, relationships, 2);
 
   const pdf = new jsPDF({
     orientation: width > height ? 'landscape' : 'portrait',
@@ -238,37 +241,118 @@ export function generateSVGString(
 }
 
 async function renderDiagramToPngDataUrl(
+  canvasEl: HTMLElement,
   elements: UMLElement[],
   relationships: Relationship[],
-  dark: boolean,
   pixelRatio = 2
 ): Promise<{ dataUrl: string; width: number; height: number }> {
   const bounds = computeDiagramBounds(elements, relationships);
-  const svg = generateSVGString(elements, relationships, dark);
-  const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-
+  const exportRoot = await buildExportRoot(canvasEl, bounds);
   try {
-    const img = new Image();
-    img.src = url;
-    await new Promise<void>((resolve, reject) => {
-      img.onload = () => resolve();
-      img.onerror = () => reject(new Error('Failed to render SVG image for export'));
+    const dataUrl = await toPng(exportRoot, {
+      cacheBust: true,
+      backgroundColor: getComputedStyle(canvasEl).backgroundColor,
+      width: Math.max(1, Math.round(bounds.width)),
+      height: Math.max(1, Math.round(bounds.height)),
+      pixelRatio,
     });
 
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.max(1, Math.round(bounds.width * pixelRatio));
-    canvas.height = Math.max(1, Math.round(bounds.height * pixelRatio));
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Failed to acquire 2D canvas context for export');
-    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-    ctx.drawImage(img, 0, 0, bounds.width, bounds.height);
-
-    return { dataUrl: canvas.toDataURL('image/png'), width: bounds.width, height: bounds.height };
+    return { dataUrl, width: Math.round(bounds.width), height: Math.round(bounds.height) };
   } finally {
-    URL.revokeObjectURL(url);
+    exportRoot.remove();
   }
+}
+
+async function renderDiagramToSvgDataUrl(
+  canvasEl: HTMLElement,
+  elements: UMLElement[],
+  relationships: Relationship[]
+): Promise<string> {
+  const bounds = computeDiagramBounds(elements, relationships);
+  const exportRoot = await buildExportRoot(canvasEl, bounds);
+  try {
+    return await toSvg(exportRoot, {
+      cacheBust: true,
+      backgroundColor: getComputedStyle(canvasEl).backgroundColor,
+      width: Math.max(1, Math.round(bounds.width)),
+      height: Math.max(1, Math.round(bounds.height)),
+    });
+  } finally {
+    exportRoot.remove();
+  }
+}
+
+async function buildExportRoot(
+  canvasEl: HTMLElement,
+  bounds: DiagramBounds
+): Promise<HTMLDivElement> {
+  if ('fonts' in document) {
+    try {
+      await (document as Document & { fonts?: FontFaceSet }).fonts?.ready;
+    } catch {
+      // best effort only
+    }
+  }
+
+  const exportRoot = document.createElement('div');
+  const computed = getComputedStyle(canvasEl);
+  const rootComputed = getComputedStyle(document.documentElement);
+  const cssVars = [
+    '--bg-fill',
+    '--panel-bg',
+    '--border-color',
+    '--text-primary',
+    '--text-muted',
+    '--canvas-bg',
+    '--dot-color',
+  ] as const;
+
+  exportRoot.style.position = 'fixed';
+  exportRoot.style.left = '0';
+  exportRoot.style.top = '0';
+  exportRoot.style.width = `${Math.max(1, Math.round(bounds.width))}px`;
+  exportRoot.style.height = `${Math.max(1, Math.round(bounds.height))}px`;
+  exportRoot.style.overflow = 'hidden';
+  exportRoot.style.pointerEvents = 'none';
+  exportRoot.style.zIndex = '-1';
+  exportRoot.style.isolation = 'isolate';
+  exportRoot.style.backgroundColor = computed.backgroundColor;
+  exportRoot.style.backgroundImage = computed.backgroundImage;
+  exportRoot.style.backgroundSize = computed.backgroundSize;
+  exportRoot.style.backgroundPosition = computed.backgroundPosition;
+  exportRoot.style.backgroundRepeat = computed.backgroundRepeat;
+  exportRoot.style.backgroundColor = computed.backgroundColor;
+  exportRoot.style.color = computed.color;
+
+  cssVars.forEach((name) => {
+    const value = rootComputed.getPropertyValue(name);
+    if (value) exportRoot.style.setProperty(name, value);
+  });
+
+  const clone = canvasEl.cloneNode(true) as HTMLDivElement;
+  clone.style.position = 'absolute';
+  clone.style.left = `${-bounds.minX}px`;
+  clone.style.top = `${-bounds.minY}px`;
+  clone.style.transform = 'none';
+  clone.style.transformOrigin = '0 0';
+  clone.style.width = computed.width;
+  clone.style.height = computed.height;
+  clone.style.margin = '0';
+  clone.style.backgroundColor = computed.backgroundColor;
+  clone.style.backgroundImage = computed.backgroundImage;
+  clone.style.backgroundSize = computed.backgroundSize;
+  clone.style.backgroundPosition = computed.backgroundPosition;
+  clone.style.backgroundRepeat = computed.backgroundRepeat;
+  clone.style.color = computed.color;
+
+  cssVars.forEach((name) => {
+    const value = rootComputed.getPropertyValue(name);
+    if (value) clone.style.setProperty(name, value);
+  });
+
+  exportRoot.appendChild(clone);
+  document.body.appendChild(exportRoot);
+  return exportRoot;
 }
 
 type DiagramBounds = { minX: number; minY: number; maxX: number; maxY: number; width: number; height: number };
@@ -439,17 +523,13 @@ function buildSVGDefs(_dark: boolean) {
   </marker>`;
 }
 
-export function exportSVGGenerated(
+export async function exportSVGGenerated(
+  canvasEl: HTMLElement,
   elements: UMLElement[],
   relationships: Relationship[],
-  dark: boolean,
   filename: string = 'diagram.svg'
-): void {
-  const svg = generateSVGString(elements, relationships, dark);
-  const blob = new Blob([svg], { type: 'image/svg+xml' });
-  const url = URL.createObjectURL(blob);
-  downloadDataUrl(url, filename.endsWith('.svg') ? filename : `${filename}.svg`);
-  URL.revokeObjectURL(url);
+): Promise<void> {
+  await exportSVGCapture(canvasEl, elements, relationships, filename);
 }
 
 // ────────── Helper ──────────

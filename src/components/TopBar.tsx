@@ -36,7 +36,7 @@ interface TopBarProps {
 }
 
 export function TopBar({ canvasRef }: TopBarProps) {
-  const { theme, toggleTheme, zoom, panX, panY, setZoom, setPan, resetView, snapToGrid, setSnapToGrid } = useUIStore();
+  const { theme, toggleTheme, zoom, panX, panY, setZoom, setPan, resetView, snapToGrid, setSnapToGrid, selectElement, selectRelationship } = useUIStore();
   const { exportDiagram, loadDiagram, clearDiagram } = useDiagramStore();
   const elements = useDiagramStore((s) => s.elements);
   const relationships = useDiagramStore((s) => s.relationships);
@@ -178,11 +178,20 @@ export function TopBar({ canvasRef }: TopBarProps) {
     try {
       if (format === 'json') {
         exportJSON(exportDiagram(), filename);
-      } else if (format === 'svg') {
-        exportSVGGenerated(elements, relationships, isDark, filename);
       } else {
-        if (format === 'png') await exportPNG(elements, relationships, isDark, filename);
-        else if (format === 'pdf') await exportPDF(elements, relationships, isDark, filename);
+        const canvasEl = canvasRef.current;
+        if (!canvasEl) throw new Error('Canvas is not available for export');
+
+        // Clear selection so rings/handles never appear in the exported image.
+        selectElement(null);
+        selectRelationship(null);
+        // Wait two animation frames so React re-renders and the browser paints
+        // the de-selected state before we capture the canvas.
+        await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+
+        if (format === 'svg') await exportSVGGenerated(canvasEl, elements, relationships, filename);
+        else if (format === 'png') await exportPNG(canvasEl, elements, relationships, filename);
+        else if (format === 'pdf') await exportPDF(canvasEl, elements, relationships, filename);
       }
     } finally {
       setLoading(null);
