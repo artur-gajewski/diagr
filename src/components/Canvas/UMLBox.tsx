@@ -34,7 +34,13 @@ function NoteBox({
   onClick: (e: React.MouseEvent) => void;
 }) {
   const { updateElement, deleteElement } = useDiagramStore();
-  const { selectElement, tool, snapToGrid: snapEnabled } = useUIStore();
+  const {
+    selectElement,
+    tool,
+    snapToGrid: snapEnabled,
+    requireDeleteConfirmation,
+    requestDeleteConfirm,
+  } = useUIStore();
   const { zoom } = useContext(CanvasContext);
   const noteHeight    = element.noteHeight ?? NOTE_MIN_HEIGHT;
   const textAreaH     = noteHeight - NOTE_HEADER_HEIGHT - 12;
@@ -81,7 +87,20 @@ function NoteBox({
         <span className="flex-1 text-[11px] font-medium text-yellow-800 dark:text-yellow-300 select-none">Note</span>
         {isSelected && (
           <button className="text-yellow-600 dark:text-yellow-400 hover:text-rose-500 transition-colors"
-            onClick={(e) => { e.stopPropagation(); deleteElement(element.id); selectElement(null); }}>
+            onClick={(e) => {
+              e.stopPropagation();
+              const action = {
+                title: 'Delete Note?',
+                description: 'This will permanently remove this note from the canvas.',
+                confirmLabel: 'Delete Note',
+                onConfirm: () => {
+                  deleteElement(element.id);
+                  selectElement(null);
+                },
+              };
+              if (requireDeleteConfirmation) requestDeleteConfirm(action);
+              else action.onConfirm();
+            }}>
             <Trash2 size={11} />
           </button>
         )}

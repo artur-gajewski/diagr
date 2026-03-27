@@ -37,7 +37,22 @@ interface TopBarProps {
 }
 
 export function TopBar({ canvasRef }: TopBarProps) {
-  const { theme, toggleTheme, zoom, panX, panY, setZoom, setPan, resetView, snapToGrid, setSnapToGrid, selectElement, selectRelationship } = useUIStore();
+  const {
+    theme,
+    toggleTheme,
+    zoom,
+    panX,
+    panY,
+    setZoom,
+    setPan,
+    resetView,
+    snapToGrid,
+    setSnapToGrid,
+    requireDeleteConfirmation,
+    toggleRequireDeleteConfirmation,
+    selectElement,
+    selectRelationship,
+  } = useUIStore();
   const { exportDiagram, loadDiagram, clearDiagram, undoDiagram } = useDiagramStore();
   const canUndo = useDiagramStore((s) => s.canUndo);
   const elements = useDiagramStore((s) => s.elements);
@@ -153,6 +168,13 @@ export function TopBar({ canvasRef }: TopBarProps) {
     selectRelationship(null);
   };
 
+  const handleClearDiagram = () => {
+    clearDiagram();
+    selectElement(null);
+    selectRelationship(null);
+    setClearDialogOpen(false);
+  };
+
   return (
     <header className="flex items-center gap-3 px-4 py-2 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 z-50 shadow-sm">
       {/* Logo */}
@@ -199,6 +221,15 @@ export function TopBar({ canvasRef }: TopBarProps) {
       >
         <Grid3X3 size={14} />
       </IconBtn>
+
+      <TopBarBtn
+        title={requireDeleteConfirmation ? 'Delete confirmation: On' : 'Delete confirmation: Off'}
+        icon={<Trash2 size={14} />}
+        onClick={toggleRequireDeleteConfirmation}
+        active={requireDeleteConfirmation}
+      >
+        Confirm delete
+      </TopBarBtn>
 
       <div className="flex-1" />
 
@@ -274,7 +305,10 @@ export function TopBar({ canvasRef }: TopBarProps) {
         {/* Clear */}
         <IconBtn
           title="Clear diagram"
-          onClick={() => setClearDialogOpen(true)}
+          onClick={() => {
+            if (requireDeleteConfirmation) setClearDialogOpen(true);
+            else handleClearDiagram();
+          }}
           danger
         >
           <Trash2 size={14} />
@@ -341,10 +375,7 @@ export function TopBar({ canvasRef }: TopBarProps) {
               </Dialog.Close>
               <button
                 className="px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-rose-500 hover:bg-rose-600 transition-colors"
-                onClick={() => {
-                  clearDiagram();
-                  setClearDialogOpen(false);
-                }}
+                onClick={handleClearDiagram}
               >
                 Clear
               </button>
@@ -497,7 +528,7 @@ export function TopBar({ canvasRef }: TopBarProps) {
                     <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-nowrap">
                       Delete / D
                     </kbd>
-                    <span className="text-slate-600 dark:text-slate-400">Delete selected element or relationship</span>
+                    <span className="text-slate-600 dark:text-slate-400">Delete selected element or relationship {requireDeleteConfirmation ? '(with confirmation)' : '(immediately)'}</span>
                   </div>
                   <div className="flex items-start gap-3">
                     <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-nowrap">
@@ -549,6 +580,7 @@ export function TopBar({ canvasRef }: TopBarProps) {
                   <li>Use the left toolbar to add new elements</li>
                   <li>Use the ∿ / ┐ toolbar button to set the default routing mode for new relationships</li>
                   <li>Toggle snap-to-grid in the top bar for precise alignment</li>
+                  <li>Use the “Confirm delete” toggle in the top bar to require or skip deletion confirmation</li>
                   <li>Export diagrams as PNG, SVG, PDF, or JSON with custom filenames</li>
                   <li>Import previously saved JSON diagrams</li>
                   <li>Dark mode preference is saved automatically</li>

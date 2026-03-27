@@ -1,9 +1,12 @@
+import * as Dialog from '@radix-ui/react-dialog';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Trash2, Copy } from 'lucide-react';
+import { X, Trash2, Copy, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { useDiagramStore } from '@/store/diagramStore';
 import { useUIStore } from '@/store/uiStore';
+import type { DeleteConfirmState } from '@/store/uiStore';
 import type { UMLElement, Relationship, RelationshipType, ElementType } from '@/types';
 import { cn } from '@/lib/utils';
+import { getBoxRect } from '@/utils/geometry';
 
 
 const EL_TYPES: { value: ElementType; label: string }[] = [
@@ -84,9 +87,14 @@ function Select(
   );
 }
 
-
 // ────────── Element panel ──────────
-function ElementPanel({ element }: { element: UMLElement }) {
+function ElementPanel({
+  element,
+  onRequestDelete,
+}: {
+  element: UMLElement;
+  onRequestDelete: (config: DeleteConfirmState) => void;
+}) {
   const { updateElement, deleteElement, duplicateElement } = useDiagramStore();
   const { selectElement } = useUIStore();
 
@@ -109,7 +117,20 @@ function ElementPanel({ element }: { element: UMLElement }) {
           />
         </Field>
         <ActionBtn onClick={handleDuplicate} label="Duplicate Note" icon={<Copy size={14} />} />
-        <DeleteBtn onClick={() => { deleteElement(element.id); selectElement(null); }} label="Delete Note" />
+        <DeleteBtn
+          onClick={() =>
+            onRequestDelete({
+              title: 'Delete Note?',
+              description: 'This will permanently remove this note from the canvas.',
+              confirmLabel: 'Delete Note',
+              onConfirm: () => {
+                deleteElement(element.id);
+                selectElement(null);
+              },
+            })
+          }
+          label="Delete Note"
+        />
       </div>
     );
   }
@@ -143,7 +164,20 @@ function ElementPanel({ element }: { element: UMLElement }) {
           </div>
         </Field>
         <ActionBtn onClick={handleDuplicate} label="Duplicate Area" icon={<Copy size={14} />} />
-        <DeleteBtn onClick={() => { deleteElement(element.id); selectElement(null); }} label="Delete Area" />
+        <DeleteBtn
+          onClick={() =>
+            onRequestDelete({
+              title: 'Delete Area?',
+              description: 'This will permanently remove this area and any relationships attached through its elements will remain unchanged.',
+              confirmLabel: 'Delete Area',
+              onConfirm: () => {
+                deleteElement(element.id);
+                selectElement(null);
+              },
+            })
+          }
+          label="Delete Area"
+        />
       </div>
     );
   }
@@ -193,7 +227,20 @@ function ElementPanel({ element }: { element: UMLElement }) {
           </Field>
         </div>
         <ActionBtn onClick={handleDuplicate} label="Duplicate Text" icon={<Copy size={14} />} />
-        <DeleteBtn onClick={() => { deleteElement(element.id); selectElement(null); }} label="Delete Text" />
+        <DeleteBtn
+          onClick={() =>
+            onRequestDelete({
+              title: 'Delete Text?',
+              description: 'This will permanently remove this text element from the canvas.',
+              confirmLabel: 'Delete Text',
+              onConfirm: () => {
+                deleteElement(element.id);
+                selectElement(null);
+              },
+            })
+          }
+          label="Delete Text"
+        />
       </div>
     );
   }
@@ -216,7 +263,20 @@ function ElementPanel({ element }: { element: UMLElement }) {
           )}
         </div>
         <ActionBtn onClick={handleDuplicate} label="Duplicate Image" icon={<Copy size={14} />} />
-        <DeleteBtn onClick={() => { deleteElement(element.id); selectElement(null); }} label="Delete Image" />
+        <DeleteBtn
+          onClick={() =>
+            onRequestDelete({
+              title: 'Delete Image?',
+              description: 'This will permanently remove this image from the canvas.',
+              confirmLabel: 'Delete Image',
+              onConfirm: () => {
+                deleteElement(element.id);
+                selectElement(null);
+              },
+            })
+          }
+          label="Delete Image"
+        />
       </div>
     );
   }
@@ -239,7 +299,20 @@ function ElementPanel({ element }: { element: UMLElement }) {
         />
       </Field>
       <ActionBtn onClick={handleDuplicate} label="Duplicate Element" icon={<Copy size={14} />} />
-      <DeleteBtn onClick={() => { deleteElement(element.id); selectElement(null); }} label="Delete Element" />
+      <DeleteBtn
+        onClick={() =>
+          onRequestDelete({
+            title: 'Delete Element?',
+            description: 'This will permanently remove this element and any connected relationships.',
+            confirmLabel: 'Delete Element',
+            onConfirm: () => {
+              deleteElement(element.id);
+              selectElement(null);
+            },
+          })
+        }
+        label="Delete Element"
+      />
     </div>
   );
 }
@@ -269,9 +342,58 @@ function DeleteBtn({ onClick, label }: { onClick: () => void; label: string }) {
 }
 
 // ────────── Relationship panel ──────────
-function RelationshipPanel({ relationship }: { relationship: Relationship }) {
+function RelationshipPanel({
+  relationship,
+  onRequestDelete,
+}: {
+  relationship: Relationship;
+  onRequestDelete: (config: DeleteConfirmState) => void;
+}) {
   const { updateRelationship, deleteRelationship } = useDiagramStore();
-  const { selectRelationship } = useUIStore();
+  const { selectRelationship, zoom, setPan } = useUIStore();
+  const elements = useDiagramStore((s) => s.elements);
+
+  const handleGoToStart = () => {
+    const sourceEl = elements.find((el) => el.id === relationship.sourceId);
+    if (!sourceEl) return;
+
+    const vp = document.querySelector('main');
+    const rect = vp?.getBoundingClientRect();
+    const viewportWidth = rect?.width ?? window.innerWidth;
+    const viewportHeight = rect?.height ?? window.innerHeight;
+
+    // Get source element's center in canvas space
+    const boxRect = getBoxRect(sourceEl);
+    const centerX = boxRect.x + boxRect.width / 2;
+    const centerY = boxRect.y + boxRect.height / 2;
+
+    // Calculate pan so the source element's center is at viewport center
+    const panX = viewportWidth / 2 - centerX * zoom;
+    const panY = viewportHeight / 2 - centerY * zoom;
+
+    setPan(panX, panY);
+  };
+
+  const handleGoToEnd = () => {
+    const targetEl = elements.find((el) => el.id === relationship.targetId);
+    if (!targetEl) return;
+
+    const vp = document.querySelector('main');
+    const rect = vp?.getBoundingClientRect();
+    const viewportWidth = rect?.width ?? window.innerWidth;
+    const viewportHeight = rect?.height ?? window.innerHeight;
+
+    // Get target element's center in canvas space
+    const boxRect = getBoxRect(targetEl);
+    const centerX = boxRect.x + boxRect.width / 2;
+    const centerY = boxRect.y + boxRect.height / 2;
+
+    // Calculate pan so the target element's center is at viewport center
+    const panX = viewportWidth / 2 - centerX * zoom;
+    const panY = viewportHeight / 2 - centerY * zoom;
+
+    setPan(panX, panY);
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -298,11 +420,34 @@ function RelationshipPanel({ relationship }: { relationship: Relationship }) {
       </Field>
 
       <button
+        className="flex items-center justify-center gap-2 w-full py-2 rounded-lg border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm font-medium transition-colors"
+        onClick={handleGoToStart}
+      >
+        <ArrowDownLeft size={14} />
+        Go to source
+      </button>
+
+      <button
+        className="flex items-center justify-center gap-2 w-full py-2 rounded-lg border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm font-medium transition-colors"
+        onClick={handleGoToEnd}
+      >
+        <ArrowUpRight size={14} />
+        Go to target
+      </button>
+
+      <button
         className="mt-2 flex items-center justify-center gap-2 w-full py-2 rounded-lg border border-rose-200 dark:border-rose-800 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 text-sm font-medium transition-colors"
-        onClick={() => {
-          deleteRelationship(relationship.id);
-          selectRelationship(null);
-        }}
+        onClick={() =>
+          onRequestDelete({
+            title: 'Delete Relationship?',
+            description: 'This will permanently remove this relationship from the canvas.',
+            confirmLabel: 'Delete Relationship',
+            onConfirm: () => {
+              deleteRelationship(relationship.id);
+              selectRelationship(null);
+            },
+          })
+        }
       >
         <Trash2 size={14} />
         Delete Relationship
@@ -313,8 +458,17 @@ function RelationshipPanel({ relationship }: { relationship: Relationship }) {
 
 // ────────── PropertiesPanel (outer) ──────────
 export function PropertiesPanel() {
-  const { selectedElementId, selectedElementIds, selectedRelationshipId, selectElement, selectRelationship } =
-    useUIStore();
+  const {
+    selectedElementId,
+    selectedElementIds,
+    selectedRelationshipId,
+    selectElement,
+    selectRelationship,
+    requireDeleteConfirmation,
+    deleteConfirm,
+    requestDeleteConfirm,
+    clearDeleteConfirm,
+  } = useUIStore();
   const elements = useDiagramStore((s) => s.elements);
   const relationships = useDiagramStore((s) => s.relationships);
 
@@ -328,43 +482,90 @@ export function PropertiesPanel() {
 
   const isOpen = !isMultiElementSelection && Boolean(selectedElement || selectedRelationship);
 
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.aside
-          key="props-panel"
-          initial={{ x: '100%', opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: '100%', opacity: 0 }}
-          transition={{ type: 'spring', stiffness: 340, damping: 32 }}
-          className="absolute right-0 top-0 bottom-0 w-64 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-700 overflow-y-auto scrollbar-hide z-50 shadow-xl"
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-900 z-10">
-            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              {selectedElement ? 'Element' : 'Relationship'}
-            </span>
-            <button
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-              onClick={() => {
-                selectElement(null);
-                selectRelationship(null);
-              }}
-            >
-              <X size={16} />
-            </button>
-          </div>
+  const handleConfirmDelete = () => {
+    if (!deleteConfirm) return;
+    deleteConfirm.onConfirm();
+    clearDeleteConfirm();
+  };
 
-          {/* Content */}
-          <div className="p-4">
-            {selectedElement && <ElementPanel element={selectedElement} />}
-            {selectedRelationship && (
-              <RelationshipPanel relationship={selectedRelationship} />
-            )}
-          </div>
-        </motion.aside>
-      )}
-    </AnimatePresence>
+  const requestDeleteOrRun = (config: DeleteConfirmState) => {
+    if (requireDeleteConfirmation) {
+      requestDeleteConfirm(config);
+      return;
+    }
+    config.onConfirm();
+  };
+
+  return (
+    <>
+      <AnimatePresence>
+        {isOpen && (
+        <>
+          <motion.aside
+            key="props-panel"
+            initial={{ x: '100%', opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '100%', opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 340, damping: 32 }}
+            className="absolute right-0 top-0 bottom-0 w-64 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-700 overflow-y-auto scrollbar-hide z-50 shadow-xl"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-900 z-10">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                {selectedElement ? 'Element' : 'Relationship'}
+              </span>
+              <button
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                onClick={() => {
+                  selectElement(null);
+                  selectRelationship(null);
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-4">
+              {selectedElement && <ElementPanel element={selectedElement} onRequestDelete={requestDeleteOrRun} />}
+              {selectedRelationship && (
+                <RelationshipPanel relationship={selectedRelationship} onRequestDelete={requestDeleteOrRun} />
+              )}
+            </div>
+          </motion.aside>
+        </>
+        )}
+      </AnimatePresence>
+
+      <Dialog.Root open={Boolean(deleteConfirm)} onOpenChange={(open) => { if (!open) clearDeleteConfirm(); }}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-slate-900/40 backdrop-blur-[1px] z-[90]" />
+          <Dialog.Content
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[92vw] max-w-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl z-[100] p-4"
+          >
+            <Dialog.Title className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {deleteConfirm?.title}
+            </Dialog.Title>
+            <Dialog.Description className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+              {deleteConfirm?.description}
+            </Dialog.Description>
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <Dialog.Close asChild>
+                <button className="px-3 py-1.5 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                  Cancel
+                </button>
+              </Dialog.Close>
+              <button
+                className="px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-rose-500 hover:bg-rose-600 transition-colors"
+                onClick={handleConfirmDelete}
+              >
+                {deleteConfirm?.confirmLabel ?? 'Delete'}
+              </button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+    </>
   );
 }
 

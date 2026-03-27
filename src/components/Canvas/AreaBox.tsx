@@ -29,6 +29,8 @@ export function AreaBox({ element }: AreaBoxProps) {
     setModifierSelectedElements,
     tool,
     snapToGrid: snapEnabled,
+    requireDeleteConfirmation,
+    requestDeleteConfirm,
   } = useUIStore();
   const { zoom } = useContext(CanvasContext);
 
@@ -208,8 +210,17 @@ export function AreaBox({ element }: AreaBoxProps) {
           className="text-slate-400 hover:text-rose-500 transition-colors p-1 rounded"
           onClick={(e) => {
             e.stopPropagation();
-            deleteElement(element.id);
-            selectElement(null);
+            const action = {
+              title: 'Delete Area?',
+              description: 'This will permanently remove this area from the canvas.',
+              confirmLabel: 'Delete Area',
+              onConfirm: () => {
+                deleteElement(element.id);
+                selectElement(null);
+              },
+            };
+            if (requireDeleteConfirmation) requestDeleteConfirm(action);
+            else action.onConfirm();
           }}
           title="Delete area"
         >

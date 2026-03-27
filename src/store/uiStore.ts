@@ -4,6 +4,13 @@ import { calculateFitToContent } from '@/utils/geometry';
 
 export type Tool = 'select' | 'connect' | 'dashed_connect' | 'pan';
 
+export interface DeleteConfirmState {
+  title: string;
+  description: string;
+  confirmLabel: string;
+  onConfirm: () => void;
+}
+
 interface UIStore {
   // Selection
   selectedElementId: string | null;
@@ -27,6 +34,10 @@ interface UIStore {
   panX: number;
   panY: number;
   snapToGrid: boolean;
+  requireDeleteConfirmation: boolean;
+
+  // Shared confirmation dialog state
+  deleteConfirm: DeleteConfirmState | null;
 
   // Actions
   selectElement: (id: string | null) => void;
@@ -43,6 +54,10 @@ interface UIStore {
   setZoom: (zoom: number) => void;
   setPan: (x: number, y: number) => void;
   setSnapToGrid: (value: boolean) => void;
+  setRequireDeleteConfirmation: (value: boolean) => void;
+  toggleRequireDeleteConfirmation: () => void;
+  requestDeleteConfirm: (config: DeleteConfirmState) => void;
+  clearDeleteConfirm: () => void;
   resetView: () => void;
   fitToContent: (elements: UMLElement[], relationships: Relationship[], viewportWidth: number, viewportHeight: number) => void;
   zoomAtViewportCenter: (nextZoomRaw: number, viewportWidth: number, viewportHeight: number) => void;
@@ -63,6 +78,8 @@ export const useUIStore = create<UIStore>((set) => ({
   panX: 0,
   panY: 0,
   snapToGrid: false,
+  requireDeleteConfirmation: localStorage.getItem('diagr-require-delete-confirmation') !== 'false',
+  deleteConfirm: null,
 
   selectElement: (id) =>
     set({
@@ -125,6 +142,19 @@ export const useUIStore = create<UIStore>((set) => ({
   setZoom: (zoom) => set({ zoom }),
   setPan: (panX, panY) => set({ panX, panY }),
   setSnapToGrid: (value) => set({ snapToGrid: value }),
+  setRequireDeleteConfirmation: (value) =>
+    set(() => {
+      localStorage.setItem('diagr-require-delete-confirmation', String(value));
+      return { requireDeleteConfirmation: value };
+    }),
+  toggleRequireDeleteConfirmation: () =>
+    set((s) => {
+      const next = !s.requireDeleteConfirmation;
+      localStorage.setItem('diagr-require-delete-confirmation', String(next));
+      return { requireDeleteConfirmation: next };
+    }),
+  requestDeleteConfirm: (deleteConfirm) => set({ deleteConfirm }),
+  clearDeleteConfirm: () => set({ deleteConfirm: null }),
   resetView: () => set({ zoom: 1, panX: 0, panY: 0 }),
   fitToContent: (elements, relationships, viewportWidth, viewportHeight) => {
     const { zoom, panX, panY } = calculateFitToContent(elements, relationships, viewportWidth, viewportHeight);

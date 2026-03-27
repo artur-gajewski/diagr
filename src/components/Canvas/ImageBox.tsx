@@ -1,6 +1,6 @@
 import { useContext, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Zap } from 'lucide-react';
 import type { UMLElement } from '@/types';
 import { useDiagramStore } from '@/store/diagramStore';
 import { useUIStore } from '@/store/uiStore';
@@ -12,14 +12,20 @@ interface ImageBoxProps {
 }
 
 export function ImageBox({ element }: ImageBoxProps) {
-  const { updateElement, deleteElement } = useDiagramStore();
+  const { updateElement, deleteElement, addRelationship, updateRelationship } = useDiagramStore();
   const {
     selectedElementId,
     selectedElementIds,
     selectElement,
     setModifierSelectedElements,
     tool,
+    connectSourceId,
+    setConnectSource,
+    pendingRelType,
+    defaultRelationshipRoutingMode,
     snapToGrid: snapEnabled,
+    requireDeleteConfirmation,
+    requestDeleteConfirm,
   } = useUIStore();
   const { zoom } = useContext(CanvasContext);
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
@@ -30,6 +36,7 @@ export function ImageBox({ element }: ImageBoxProps) {
 
   const isSelected =
     selectedElementId === element.id || selectedElementIds.includes(element.id);
+  const isConnectSource = connectSourceId === element.id;
 
   const boxW = element.boxWidth ?? 200;
   const boxH = element.boxHeight ?? 200;
@@ -116,14 +123,27 @@ export function ImageBox({ element }: ImageBoxProps) {
     document.addEventListener('mouseup', onUp);
   };
 
-  // ── Click (select) ──
+  // ── Click (select / connect) ──
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (suppressNextClickRef.current) {
       suppressNextClickRef.current = false;
       return;
     }
-    if (e.ctrlKey || e.metaKey) {
+    if (tool === 'connect' || tool === 'dashed_connect') {
+      if (!connectSourceId) {
+        setConnectSource(element.id);
+      } else if (connectSourceId !== element.id) {
+        const relId = addRelationship(connectSourceId, element.id, pendingRelType);
+        if (relId) {
+          updateRelationship(relId, {
+            routingMode: defaultRelationshipRoutingMode,
+            ...(tool === 'dashed_connect' ? { isDashed: true } : {}),
+          });
+        }
+        setConnectSource(null);
+      }
+    } else if (e.ctrlKey || e.metaKey) {
       // If element was already selected before mousedown → toggle it off
       if (ctrlSelectionWasInRef.current) {
         const currentIds = useUIStore.getState().selectedElementIds;
@@ -243,6 +263,12 @@ export function ImageBox({ element }: ImageBoxProps) {
         </div>
       )}
 
+      {isConnectSource && (
+        <div className="absolute inset-0 rounded-xl border-2 border-amber-400 pointer-events-none">
+          <div className="absolute top-1 right-1 bg-amber-400 rounded-full p-0.5"><Zap size={10} className="text-white" /></div>
+        </div>
+      )}
+
       {/* Delete button (visible when selected) */}
       {isSelected && (
         <button
@@ -250,8 +276,17 @@ export function ImageBox({ element }: ImageBoxProps) {
           className="text-slate-400 hover:text-rose-500 transition-colors p-1 rounded bg-white/80 dark:bg-slate-900/80"
           onClick={(e) => {
             e.stopPropagation();
-            deleteElement(element.id);
-            selectElement(null);
+            const action = {
+              title: 'Delete Image?',
+              description: 'This will permanently remove this image from the canvas.',
+              confirmLabel: 'Delete Image',
+              onConfirm: () => {
+                deleteElement(element.id);
+                selectElement(null);
+              },
+            };
+            if (requireDeleteConfirmation) requestDeleteConfirm(action);
+            else action.onConfirm();
           }}
           title="Delete image"
         >

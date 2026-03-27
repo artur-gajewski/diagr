@@ -3,23 +3,44 @@ import { useDiagramStore } from '@/store/diagramStore';
 import { useUIStore } from '@/store/uiStore';
 
 export function useKeyboard() {
-  const deleteElement = useDiagramStore((s) => s.deleteElement);
-  const deleteRelationship = useDiagramStore((s) => s.deleteRelationship);
   const updateRelationship = useDiagramStore((s) => s.updateRelationship);
   const undoDiagram = useDiagramStore((s) => s.undoDiagram);
   const canUndo = useDiagramStore((s) => s.canUndo);
   const elements = useDiagramStore((s) => s.elements);
   const relationships = useDiagramStore((s) => s.relationships);
-  const { selectedElementId, selectedElementIds, selectedRelationshipId, selectElement, selectRelationship, setTool, setSelectedElements, fitToContent, zoom, zoomAtViewportCenter, snapToGrid, setSnapToGrid } =
+  const deleteElement = useDiagramStore((s) => s.deleteElement);
+  const deleteRelationship = useDiagramStore((s) => s.deleteRelationship);
+  const {
+    selectedElementId,
+    selectedElementIds,
+    selectedRelationshipId,
+    selectElement,
+    selectRelationship,
+    setTool,
+    setSelectedElements,
+    fitToContent,
+    zoom,
+    zoomAtViewportCenter,
+    snapToGrid,
+    setSnapToGrid,
+    requireDeleteConfirmation,
+    deleteConfirm,
+    requestDeleteConfirm,
+  } =
     useUIStore();
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       // Ignore when typing in an input / textarea
-      const tag = (e.target as HTMLElement).tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      const target = e.target as HTMLElement;
+      const tag = target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable) return;
 
       const key = e.key.toLowerCase();
+
+      if (deleteConfirm) {
+        return;
+      }
 
       // Select tool (V)
       if (key === 'v') {
@@ -74,15 +95,44 @@ export function useKeyboard() {
       // Delete selected elements/relationships
       if (key === 'delete' || key === 'backspace' || key === 'd') {
         e.preventDefault();
-        if (selectedElementIds.length > 0) {
-          selectedElementIds.forEach((id) => deleteElement(id));
-          selectElement(null);
-        } else if (selectedElementId) {
-          deleteElement(selectedElementId);
-          selectElement(null);
+        if (selectedElementIds.length > 1) {
+          const action = {
+            title: 'Delete Elements?',
+            description: `This will permanently remove ${selectedElementIds.length} elements and any connected relationships.`,
+            confirmLabel: 'Delete Elements',
+            onConfirm: () => {
+              selectedElementIds.forEach((id) => deleteElement(id));
+              selectElement(null);
+            },
+          };
+          if (requireDeleteConfirmation) requestDeleteConfirm(action);
+          else action.onConfirm();
+        } else if (selectedElementIds.length === 1 || selectedElementId) {
+          const elementId = selectedElementId ?? selectedElementIds[0];
+          if (!elementId) return;
+          const action = {
+            title: 'Delete Element?',
+            description: 'This will permanently remove this element and any connected relationships.',
+            confirmLabel: 'Delete Element',
+            onConfirm: () => {
+              deleteElement(elementId);
+              selectElement(null);
+            },
+          };
+          if (requireDeleteConfirmation) requestDeleteConfirm(action);
+          else action.onConfirm();
         } else if (selectedRelationshipId) {
-          deleteRelationship(selectedRelationshipId);
-          selectRelationship(null);
+          const action = {
+            title: 'Delete Relationship?',
+            description: 'This will permanently remove this relationship from the canvas.',
+            confirmLabel: 'Delete Relationship',
+            onConfirm: () => {
+              deleteRelationship(selectedRelationshipId);
+              selectRelationship(null);
+            },
+          };
+          if (requireDeleteConfirmation) requestDeleteConfirm(action);
+          else action.onConfirm();
         }
       }
 
@@ -141,6 +191,9 @@ export function useKeyboard() {
     canUndo,
     deleteElement,
     deleteRelationship,
+    requireDeleteConfirmation,
+    deleteConfirm,
+    requestDeleteConfirm,
     updateRelationship,
     undoDiagram,
     selectElement,
